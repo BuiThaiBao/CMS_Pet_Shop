@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
-import axios from "axios";
-import { authService } from "../../services/authService";
+import Switch from "../../components/form/switch/Switch";
+import categoryApi from "../../services/api/categoryApi";
+import Button from "../../components/ui/button/Button";
+import { Modal } from "../../components/ui/modal";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/input/InputField";
 
 type CategoryItem = {
   id: number;
@@ -15,8 +18,7 @@ type CategoryItem = {
   updatedDate?: string;
 };
 
-export default function Category() {
-  const navigate = useNavigate();
+function Category() {
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -24,6 +26,7 @@ export default function Category() {
   const [totalElements, setTotalElements] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set()); // theo dõi id đang cập nhật
   const [query, setQuery] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
   const abortRef = useRef<AbortController | null>(null);
@@ -34,8 +37,30 @@ export default function Category() {
   const [filterFeatured, setFilterFeatured] = useState<"all" | "1" | "0">(
     "all"
   );
+  const [filterDeleted, setFilterDeleted] = useState<"all" | "1" | "0">("all");
 
-  const API_URL = "http://localhost:8080/api/v1";
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const editAbortRef = useRef<AbortController | null>(null);
+
+  // API base đã được cấu hình trong http.ts
+
+  // Khởi tạo filter từ URL nếu có (chạy một lần khi mount)
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const f = url.searchParams.get("feature");
+      const d = url.searchParams.get("deleted");
+      if (f === "1" || f === "0") setFilterFeatured(f);
+      if (d === "1" || d === "0") setFilterDeleted(d);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Đồng bộ filterFeatured vào URL để khi refresh/back vẫn giữ được lựa chọn
   useEffect(() => {
@@ -46,11 +71,16 @@ export default function Category() {
       } else {
         url.searchParams.delete("feature");
       }
+      if (filterDeleted && filterDeleted !== "all") {
+        url.searchParams.set("deleted", filterDeleted);
+      } else {
+        url.searchParams.delete("deleted");
+      }
       window.history.replaceState({}, "", url.toString());
     } catch (e) {
       // Bỏ qua trong môi trường SSR hoặc nơi không có đối tượng URL
     }
-  }, [filterFeatured]);
+  }, [filterFeatured, filterDeleted]);
 
   // Hàm tải dữ liệu trung tâm: tự động chạy khi thay đổi trang, kích thước trang, từ khóa, sắp xếp và trạng thái bộ lọc
   useEffect(() => {
@@ -59,6 +89,8 @@ export default function Category() {
       if (!mounted) return;
       if (filterFeatured === "1" || filterFeatured === "0") {
         await fetchFeatured(pageNumber, pageSize, filterFeatured as "1" | "0");
+      } else if (filterDeleted === "1" || filterDeleted === "0") {
+        await fetchDeleted(pageNumber, pageSize, filterDeleted as "1" | "0");
       } else {
         await fetchCategories(pageNumber, pageSize, query);
       }
@@ -68,7 +100,14 @@ export default function Category() {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNumber, pageSize, query, sortDirection, filterFeatured]);
+  }, [
+    pageNumber,
+    pageSize,
+    query,
+    sortDirection,
+    filterFeatured,
+    filterDeleted,
+  ]);
 
   // Gọi API GET /categories (phân trang 1-based, hỗ trợ tìm kiếm và sắp xếp)
   async function fetchCategories(page: number, size: number, q?: string) {
@@ -84,20 +123,18 @@ export default function Category() {
       }
       const controller = new AbortController();
       abortRef.current = controller;
-      const token = authService.getCurrentToken();
-      const params = {
+      const params: {
+        pageNumber: number;
+        size: number;
+        search?: string;
+        sort?: string;
+      } = {
         pageNumber: page,
         size,
         search: q ?? undefined,
-      } as Record<string, any>;
-      if (sortDirection) {
-        params.sort = `name,${sortDirection}`;
-      }
-      const res = await axios.get(`${API_URL}/categories`, {
-        params,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        signal: controller.signal,
-      });
+        sort: sortDirection ? `name,${sortDirection}` : undefined,
+      };
+      const res = await categoryApi.list(params, { signal: controller.signal });
       const data = res?.data?.result;
       if (data) {
         setItems(data.content || []);
@@ -166,25 +203,15 @@ export default function Category() {
       }
       const controller = new AbortController();
       abortRef.current = controller;
-      const token = authService.getCurrentToken();
-
-      const form = new URLSearchParams();
-      form.append("pageNumber", String(page));
-      form.append("size", String(size));
-      form.append("isFeature", isFeature);
-      if (sortDirection) form.append("sort", `name,${sortDirection}`);
-      if (query) form.append("search", query);
-
-      const res = await axios.post(
-        `${API_URL}/categories/feature`,
-        form.toString(),
+      const res = await categoryApi.feature(
         {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          signal: controller.signal,
-        }
+          pageNumber: page,
+          size,
+          isFeature,
+          sort: sortDirection ? `name,${sortDirection}` : undefined,
+          search: query || undefined,
+        },
+        { signal: controller.signal }
       );
 
       const data = res?.data?.result ?? res?.data;
@@ -217,6 +244,192 @@ export default function Category() {
     } finally {
       setLoading(false);
       abortRef.current = null;
+    }
+  }
+
+  // Gọi API POST x-www-form-urlencoded /categories/delete với isDeleted=1|0
+  async function fetchDeleted(
+    page: number,
+    size: number,
+    isDeleted: "1" | "0"
+  ) {
+    setLoading(true);
+    setError(null);
+    try {
+      if (abortRef.current) {
+        try {
+          abortRef.current.abort();
+        } catch (e) {}
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const res = await categoryApi.deleted(
+        {
+          pageNumber: page,
+          size,
+          isDeleted,
+          sort: sortDirection ? `name,${sortDirection}` : undefined,
+          search: query || undefined,
+        },
+        { signal: controller.signal }
+      );
+
+      const data = res?.data?.result ?? res?.data;
+      if (data) {
+        setItems(data.content || []);
+        setTotalPages(data.totalPages ?? 0);
+        setTotalElements(data.totalElements ?? 0);
+        const serverPageRaw =
+          typeof data.number === "number"
+            ? data.number
+            : (data.pageable?.pageNumber as number | undefined);
+        const serverSize = data.size ?? data.pageable?.pageSize ?? size;
+        let resolvedPage = page;
+        if (typeof serverPageRaw === "number") {
+          if (serverPageRaw === page - 1) resolvedPage = serverPageRaw + 1;
+          else if (serverPageRaw === page) resolvedPage = serverPageRaw;
+        }
+        setPageNumber(resolvedPage);
+        setPageSize(serverSize);
+      } else {
+        setItems([]);
+        setTotalPages(0);
+        setTotalElements(0);
+      }
+    } catch (err: any) {
+      const code = err?.code as string | undefined;
+      if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
+      console.error(err);
+      setError(err?.message || "Failed to fetch deleted categories");
+    } finally {
+      setLoading(false);
+      abortRef.current = null;
+    }
+  }
+
+  // Bật/tắt trường isFeatured | isDeleted và cập nhật server
+  async function handleToggleField(
+    id: number,
+    field: "isFeatured" | "isDeleted",
+    checked: boolean
+  ) {
+    const newValue: "0" | "1" = checked ? "1" : "0";
+    const current = items.find((it) => it.id === id);
+    if (!current) return;
+
+    const prevItems = items;
+    const nextItems = items.map((it) => {
+      if (it.id !== id) return it;
+      const updated: CategoryItem = {
+        ...it,
+        [field]: newValue,
+      } as CategoryItem;
+      // Nếu đánh dấu deleted=1 thì đồng thời tắt featured=0
+      if (field === "isDeleted" && newValue === "1") {
+        updated.isFeatured = "0";
+      }
+      return updated;
+    });
+    setItems(nextItems);
+    const setCopy = new Set(updatingIds);
+    setCopy.add(id);
+    setUpdatingIds(setCopy);
+
+    try {
+      const computedIsFeatured: "0" | "1" =
+        field === "isFeatured"
+          ? newValue
+          : field === "isDeleted" && newValue === "1"
+          ? "0"
+          : (current.isFeatured as "0" | "1" | undefined) ?? "0";
+
+      const payload = {
+        name: current.name,
+        description: current.description ?? "",
+        isFeatured: computedIsFeatured,
+        isDeleted: (field === "isDeleted"
+          ? newValue
+          : (current.isDeleted as "0" | "1" | undefined) ?? "0") as "0" | "1",
+      };
+      await categoryApi.update(id, payload);
+    } catch (err: any) {
+      setItems(prevItems); // revert khi lỗi
+      setError(err?.message || "Failed to update category");
+    } finally {
+      const after = new Set(updatingIds);
+      after.delete(id);
+      setUpdatingIds(after);
+    }
+  }
+
+  // Open Edit modal and load item
+  async function openEditModal(id: number) {
+    setEditError(null);
+    setEditLoading(true);
+    setEditOpen(true);
+    setEditId(id);
+    try {
+      if (editAbortRef.current) {
+        try {
+          editAbortRef.current.abort();
+        } catch {}
+      }
+      const controller = new AbortController();
+      editAbortRef.current = controller;
+      const res = await categoryApi.getById(id);
+      const data = res?.data?.result ?? res?.data;
+      setEditName(data?.name ?? "");
+      setEditDescription(data?.description ?? "");
+    } catch (err: any) {
+      const code = err?.code as string | undefined;
+      if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
+      setEditError(err?.message || "Failed to load category");
+    } finally {
+      setEditLoading(false);
+      editAbortRef.current = null;
+    }
+  }
+
+  function closeEditModal() {
+    if (editAbortRef.current) {
+      try {
+        editAbortRef.current.abort();
+      } catch {}
+      editAbortRef.current = null;
+    }
+    setEditOpen(false);
+    setEditId(null);
+    setEditName("");
+    setEditDescription("");
+    setEditError(null);
+  }
+
+  async function handleEditSave() {
+    if (!editId) return;
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const current = items.find((it) => it.id === editId);
+      const payload = {
+        name: editName.trim(),
+        description: editDescription ?? "",
+        isFeatured: (current?.isFeatured as "0" | "1" | undefined) ?? "0",
+        isDeleted: (current?.isDeleted as "0" | "1" | undefined) ?? "0",
+      };
+      await categoryApi.update(editId, payload);
+      // update list locally
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === editId
+            ? { ...it, name: payload.name, description: payload.description }
+            : it
+        )
+      );
+      closeEditModal();
+    } catch (err: any) {
+      setEditError(err?.message || "Failed to update category");
+    } finally {
+      setEditLoading(false);
     }
   }
 
@@ -335,8 +548,25 @@ export default function Category() {
                       </select>
                     </div>
 
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Deleted
+                      </label>
+                      <select
+                        value={filterDeleted}
+                        onChange={(e) =>
+                          setFilterDeleted(e.target.value as any)
+                        }
+                        className="mt-1 w-full border rounded px-2 py-1"
+                      >
+                        <option value="all">All</option>
+                        <option value="1">Deleted</option>
+                        <option value="0">Not Deleted</option>
+                      </select>
+                    </div>
+
                     <div className="flex justify-end">
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           setFilterPanelOpen(false);
@@ -345,7 +575,7 @@ export default function Category() {
                         className="px-4 py-2 bg-indigo-600 text-white rounded"
                       >
                         Apply
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -355,9 +585,6 @@ export default function Category() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-sm text-gray-500 border-b">
-                    <th className="py-3 px-4 w-8">
-                      <input type="checkbox" />
-                    </th>
                     <th className="py-3 px-4">
                       <div className="inline-flex items-center gap-2">
                         <span>Category</span>
@@ -415,6 +642,7 @@ export default function Category() {
                     </th>
                     <th className="py-3 px-4">Description</th>
                     <th className="py-3 px-4">Featured</th>
+                    <th className="py-3 px-4">Deleted</th>
                     <th className="py-3 px-4">Created At</th>
                     <th className="py-3 px-4">Actions</th>
                   </tr>
@@ -422,22 +650,19 @@ export default function Category() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center">
+                      <td colSpan={5} className="p-6 text-center">
                         Loading...
                       </td>
                     </tr>
                   ) : items.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center text-gray-500">
+                      <td colSpan={5} className="p-6 text-center text-gray-500">
                         No categories found
                       </td>
                     </tr>
                   ) : (
                     items.map((c) => (
                       <tr key={c.id} className="border-b">
-                        <td className="py-4 px-4">
-                          <input type="checkbox" />
-                        </td>
                         <td className="py-4 px-4">
                           <div className="font-medium">{c.name}</div>
                           <div className="text-xs text-gray-400">
@@ -448,15 +673,28 @@ export default function Category() {
                           {c.description}
                         </td>
                         <td className="py-4 px-4 text-sm">
-                          {c.isFeatured === "1" ? (
-                            <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
-                              Yes
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                              No
-                            </span>
-                          )}
+                          <Switch
+                            key={`feat-${c.id}-${c.isFeatured}`}
+                            label=""
+                            color="blue"
+                            disabled={updatingIds.has(c.id)}
+                            defaultChecked={c.isFeatured === "1"}
+                            onChange={(checked) =>
+                              handleToggleField(c.id, "isFeatured", checked)
+                            }
+                          />
+                        </td>
+                        <td className="py-4 px-4 text-sm">
+                          <Switch
+                            key={`del-${c.id}-${c.isDeleted}`}
+                            label=""
+                            color="blue"
+                            disabled={updatingIds.has(c.id)}
+                            defaultChecked={c.isDeleted === "1"}
+                            onChange={(checked) =>
+                              handleToggleField(c.id, "isDeleted", checked)
+                            }
+                          />
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
                           {c.createdDate}
@@ -464,7 +702,7 @@ export default function Category() {
                         <td className="py-4 px-4">
                           <button
                             className="text-sm text-brand-500"
-                            onClick={() => navigate(`/category/edit/${c.id}`)}
+                            onClick={() => openEditModal(c.id)}
                           >
                             Edit
                           </button>
@@ -565,6 +803,73 @@ export default function Category() {
           </div>
         </div>
       </div>
+      {/* Edit Category Modal */}
+      <Modal
+        isOpen={editOpen}
+        onClose={closeEditModal}
+        className="max-w-[700px] m-4"
+      >
+        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Edit Category
+            </h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+              Update category information.
+            </p>
+          </div>
+          {editError && (
+            <div className="px-2 mb-4">
+              <Alert variant="error" title="Error" message={editError} />
+            </div>
+          )}
+          <form
+            className="flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleEditSave();
+            }}
+          >
+            <div className="custom-scrollbar max-h-[450px] overflow-y-auto px-2 pb-3">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div className="col-span-2 lg:col-span-2">
+                  <Label>Name</Label>
+                  <Input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Category name"
+                  />
+                </div>
+
+                <div className="col-span-2 lg:col-span-2">
+                  <Label>Description</Label>
+                  <Input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Description"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                type="button"
+                onClick={closeEditModal}
+              >
+                Close
+              </Button>
+              <Button size="sm" type="submit" disabled={editLoading}>
+                {editLoading ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </>
   );
 }
+export default Category;

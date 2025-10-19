@@ -5,7 +5,8 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import { authService } from "../../services/authService";
+import authApi from "../../services/api/authApi";
+import Alert from "../ui/alert/Alert";
 
 export default function SignInForm() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function SignInForm() {
     setIsLoading(true);
 
     try {
-      await authService.login(formData);
+      await authApi.login(formData);
       // Đăng nhập thành công, chuyển hướng đến trang chủ
       navigate("/");
     } catch (error: any) {
@@ -66,9 +67,7 @@ export default function SignInForm() {
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 {error && (
-                  <div className="p-3 text-sm text-error-600 bg-error-50 rounded-lg dark:bg-error-500/10 dark:text-error-400">
-                    {error}
-                  </div>
+                  <Alert variant="error" title="Login failed" message={error} />
                 )}
                 <div>
                   <Label>

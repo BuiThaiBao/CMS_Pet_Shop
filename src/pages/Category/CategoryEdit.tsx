@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
-import axios from "axios";
-import { authService } from "../../services/authService";
+import categoryApi from "../../services/api/categoryApi";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
 
@@ -18,7 +17,7 @@ export default function CategoryEdit() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = "http://localhost:8080/api/v1";
+  // API base đã được cấu hình trong http.ts
 
   // Tải dữ liệu category theo id khi mở trang (GET /categories/:id)
   useEffect(() => {
@@ -27,10 +26,7 @@ export default function CategoryEdit() {
       setLoading(true);
       setError(null);
       try {
-        const token = authService.getCurrentToken();
-        const res = await axios.get(`${API_URL}/categories/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
+        const res = await categoryApi.getById(id);
         const data = res?.data?.result ?? res?.data;
         if (data) {
           setName(data.name ?? "");
@@ -57,14 +53,8 @@ export default function CategoryEdit() {
     setError(null);
     setMessage(null);
     try {
-      const token = authService.getCurrentToken();
-      const payload = { name, description, isDeleted, isFeatured };
-      const res = await axios.put(`${API_URL}/categories/${id}`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      const payload = { name, description, isDeleted, isFeatured } as const;
+      const res = await categoryApi.update(id, payload);
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
         setMessage("Update category successfully");

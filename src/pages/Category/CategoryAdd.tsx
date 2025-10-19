@@ -2,8 +2,7 @@ import { useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
-import axios from "axios";
-import { authService } from "../../services/authService";
+import categoryApi from "../../services/api/categoryApi";
 
 export default function CategoryAdd() {
   const [name, setName] = useState("");
@@ -13,7 +12,7 @@ export default function CategoryAdd() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = "http://localhost:8080/api/v1";
+  // API base đã được cấu hình trong http.ts
 
   // Xử lý submit tạo mới category (POST JSON)
   const submit = async (e: React.FormEvent) => {
@@ -22,14 +21,8 @@ export default function CategoryAdd() {
     setError(null);
     setMessage(null);
     try {
-      const token = authService.getCurrentToken();
-      const payload = { name, description, isFeatured };
-      const res = await axios.post(`${API_URL}/categories`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      const payload = { name, description, isFeatured } as const;
+      const res = await categoryApi.create(payload);
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
         setMessage("Create category successfully");
