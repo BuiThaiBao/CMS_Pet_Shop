@@ -19,7 +19,9 @@ import AppLayout from "./layout/AppLayout";
 import PrivateRouteAsync from "./components/common/PrivateRouteAsync";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-import Category from "./pages/Category";
+import Category from "./pages/Category/Category";
+import CategoryAdd from "./pages/Category/CategoryAdd";
+import CategoryEdit from "./pages/Category/CategoryEdit";
 
 export default function App() {
   return (
@@ -41,6 +43,8 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/category" element={<Category />} />
+            <Route path="/category/add" element={<CategoryAdd />} />
+            <Route path="/category/edit/:id" element={<CategoryEdit />} />
             <Route path="/blank" element={<Blank />} />
 
             {/* Forms */}

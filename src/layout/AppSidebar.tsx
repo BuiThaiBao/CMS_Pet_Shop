@@ -39,7 +39,10 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Category",
-    path: "/category",
+    subItems: [
+      { name: "Category List", path: "/category" },
+      { name: "Add Category", path: "/category/add" },
+    ],
   },
   {
     icon: <UserCircleIcon />,
