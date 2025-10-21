@@ -1,0 +1,479 @@
+import { useEffect, useRef, useState } from "react";
+import PageMeta from "../../components/common/PageMeta";
+import Alert from "../../components/ui/alert/Alert";
+import Switch from "../../components/form/switch/Switch";
+import productApi from "../../services/api/productApi";
+
+export type ProductItem = {
+  id: number;
+  categoryId?: number;
+  name: string;
+  shortDescription?: string;
+  description?: string;
+
+  soldQuantity?: number | string;
+  stock?: number | string;
+  stockQuantity?: number | string;
+  isDeleted?: string;
+  isFeatured?: string;
+  createdDate?: string;
+  updatedDate?: string;
+};
+
+export default function Product() {
+  const [items, setItems] = useState<ProductItem[]>([]);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
+  const [query, setQuery] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const abortRef = useRef<AbortController | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
+    "asc"
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!mounted) return;
+      await fetchProducts(pageNumber, pageSize, query);
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, pageSize, query, sortDirection]);
+
+  async function fetchProducts(page: number, size: number, q?: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      if (abortRef.current) {
+        try {
+          abortRef.current.abort();
+        } catch {}
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const params: {
+        pageNumber: number;
+        size: number;
+        search?: string;
+        sort?: string;
+      } = {
+        pageNumber: page,
+        size,
+        search: q ?? undefined,
+        sort: sortDirection ? `name,${sortDirection}` : undefined,
+      };
+      const res = await productApi.list(params, { signal: controller.signal });
+      const data = res?.data?.result ?? res?.data;
+      if (data) {
+        setItems(data.content || []);
+        setTotalPages(data.totalPages ?? 0);
+        setTotalElements(data.totalElements ?? 0);
+        const serverPageRaw =
+          typeof data.number === "number"
+            ? data.number
+            : (data.pageable?.pageNumber as number | undefined);
+        const serverSize = data.size ?? data.pageable?.pageSize ?? size;
+        let resolvedPage = page;
+        if (typeof serverPageRaw === "number") {
+          if (serverPageRaw === page - 1) resolvedPage = serverPageRaw + 1;
+          else if (serverPageRaw === page) resolvedPage = serverPageRaw;
+        }
+        setPageNumber(resolvedPage);
+        setPageSize(serverSize);
+      } else {
+        setItems([]);
+        setTotalPages(0);
+        setTotalElements(0);
+      }
+    } catch (err: any) {
+      const code = err?.code as string | undefined;
+      if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
+      console.error(err);
+      setError(err?.message || "Failed to fetch products");
+    } finally {
+      setLoading(false);
+      abortRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setPageNumber(1);
+      setQuery(searchInput.trim());
+    }, 150);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  async function handleToggleField(
+    id: number,
+    field: "isFeatured" | "isDeleted",
+    checked: boolean
+  ) {
+    const newValue: "0" | "1" = checked ? "1" : "0";
+    const current = items.find((it) => it.id === id);
+    if (!current) return;
+
+    const prevItems = items;
+    const nextItems = items.map((it) => {
+      if (it.id !== id) return it;
+      const updated: ProductItem = { ...it, [field]: newValue } as ProductItem;
+      if (field === "isDeleted" && newValue === "1") {
+        updated.isFeatured = "0";
+      }
+      return updated;
+    });
+    setItems(nextItems);
+    const setCopy = new Set(updatingIds);
+    setCopy.add(id);
+    setUpdatingIds(setCopy);
+
+    try {
+      const computedIsFeatured: "0" | "1" =
+        field === "isFeatured"
+          ? newValue
+          : field === "isDeleted" && newValue === "1"
+          ? "0"
+          : (current.isFeatured as "0" | "1" | undefined) ?? "0";
+      const payload = {
+        name: current.name,
+        shortDescription: current.shortDescription ?? "",
+        description: current.description ?? "",
+        soldQuantity: current.soldQuantity ?? 0,
+        stockQuantity: (current as any).stockQuantity ?? current.stock ?? 0,
+        isFeatured: computedIsFeatured,
+        isDeleted: (field === "isDeleted"
+          ? newValue
+          : (current.isDeleted as "0" | "1" | undefined) ?? "0") as "0" | "1",
+        categoryId: current.categoryId,
+      };
+      await productApi.update(id, payload);
+    } catch (err: any) {
+      setItems(prevItems);
+      setError(err?.message || "Failed to update product");
+    } finally {
+      const after = new Set(updatingIds);
+      after.delete(id);
+      setUpdatingIds(after);
+    }
+  }
+
+  const formatCurrency = (v: any) => {
+    const n = Number(v);
+    if (Number.isNaN(n)) return String(v ?? "");
+    return n.toLocaleString(undefined, { style: "currency", currency: "VND" });
+  };
+
+  return (
+    <>
+      <PageMeta title="Product" description="Product list" />
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">Product List</h1>
+            <p className="mt-2 text-sm text-gray-600">Manage products</p>
+          </div>
+        </div>
+        <div className="mt-4 bg-white rounded-lg border">
+          {error && (
+            <div className="p-4">
+              <Alert variant="error" title="Error" message={error} />
+            </div>
+          )}
+          <div className="p-4">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Products List
+                </label>
+                <div className="relative w-80">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <circle cx="11" cy="11" r="7" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                  </span>
+                  <input
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search..."
+                    aria-label="Search products"
+                    className="w-full pl-11 pr-10 py-2 rounded-lg border focus:outline-none focus:ring"
+                  />
+                  {loading && (
+                    <span className="absolute inset-y-0 right-3 flex items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-gray-500"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-sm text-gray-500 border-b">
+                    <th className="py-3 px-4">
+                      <div className="inline-flex items-center gap-2">
+                        <span>Product</span>
+                        <div className="flex flex-col items-center text-gray-400">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSortDirection("asc");
+                              setPageNumber(1);
+                            }}
+                            aria-label="Sort ascending"
+                            className={`p-0.5 ${
+                              sortDirection === "asc" ? "text-brand-500" : ""
+                            }`}
+                          >
+                            <svg
+                              width="10"
+                              height="6"
+                              viewBox="0 0 10 6"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M5 0L9.33013 6H0.669873L5 0Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSortDirection("desc");
+                              setPageNumber(1);
+                            }}
+                            aria-label="Sort descending"
+                            className={`p-0.5 ${
+                              sortDirection === "desc" ? "text-brand-500" : ""
+                            }`}
+                          >
+                            <svg
+                              width="10"
+                              height="6"
+                              viewBox="0 0 10 6"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M5 6L0.669873 0H9.33013L5 6Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </th>
+                    <th className="py-3 px-4">Short Description</th>
+
+                    <th className="py-3 px-4">Sold</th>
+                    <th className="py-3 px-4">Stock</th>
+                    <th className="py-3 px-4">Featured</th>
+                    <th className="py-3 px-4">Deleted</th>
+                    <th className="py-3 px-4">Created At</th>
+                    <th className="py-3 px-4">Updated At</th>
+                    <th className="py-3 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={10} className="p-6 text-center">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : items.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={10}
+                        className="p-6 text-center text-gray-500"
+                      >
+                        No products found
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((p) => (
+                      <tr key={p.id} className="border-b">
+                        <td className="py-4 px-4">
+                          <div className="font-medium">{p.name}</div>
+                          <div className="text-xs text-gray-400">
+                            ID: {p.id}{" "}
+                            {p.categoryId ? `• Category #${p.categoryId}` : ""}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-600 max-w-[360px] truncate">
+                          {p.shortDescription}
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-600">
+                          {p.soldQuantity ?? 0}
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-600">
+                          {p.stockQuantity ?? p.stock ?? 0}
+                        </td>
+                        <td className="py-4 px-4 text-sm">
+                          <Switch
+                            key={`feat-${p.id}-${p.isFeatured}`}
+                            label=""
+                            color="blue"
+                            disabled={updatingIds.has(p.id)}
+                            defaultChecked={p.isFeatured === "1"}
+                            onChange={(checked) =>
+                              handleToggleField(p.id, "isFeatured", checked)
+                            }
+                          />
+                        </td>
+                        <td className="py-4 px-4 text-sm">
+                          <Switch
+                            key={`del-${p.id}-${p.isDeleted}`}
+                            label=""
+                            color="blue"
+                            disabled={updatingIds.has(p.id)}
+                            defaultChecked={p.isDeleted === "1"}
+                            onChange={(checked) =>
+                              handleToggleField(p.id, "isDeleted", checked)
+                            }
+                          />
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-600">
+                          {p.createdDate}
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-600">
+                          {p.updatedDate}
+                        </td>
+                        <td className="py-4 px-4">
+                          <button className="text-sm text-brand-500" disabled>
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="p-4 border-t flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {items.length} of {totalElements} products
+            </div>
+            <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
+                  disabled={pageNumber <= 1}
+                  aria-label="Previous page"
+                  className={`w-9 h-9 flex items-center justify-center border rounded-lg ${
+                    pageNumber <= 1
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                {Array.from({ length: Math.max(totalPages, 0) }).map(
+                  (_, idx) => {
+                    const p = idx + 1;
+                    const active = p === pageNumber;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPageNumber(p)}
+                        aria-current={active ? "page" : undefined}
+                        className={`transition-all ${
+                          active
+                            ? "w-9 h-9 flex items-center justify-center text-sm rounded-md bg-indigo-600 text-white shadow"
+                            : "px-2 text-sm text-gray-700"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  }
+                )}
+                <button
+                  onClick={() => {
+                    const target = pageNumber + 1;
+                    if (totalPages && target > totalPages) return;
+                    setPageNumber(target);
+                  }}
+                  disabled={totalPages ? pageNumber >= totalPages : false}
+                  aria-label="Next page"
+                  className={`w-9 h-9 flex items-center justify-center border rounded-lg ${
+                    totalPages && pageNumber >= totalPages
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
