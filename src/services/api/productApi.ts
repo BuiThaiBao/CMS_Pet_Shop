@@ -10,7 +10,8 @@ export type ProductPayload = {
   stockQuantity?: number | string; // primary key per API example
   isFeatured?: "0" | "1";
   isDeleted?: "0" | "1";
-  categoryId?: number | string;
+  categoryId?: number | string; // Keep for backward compatibility
+  categoryName?: string; // New field
 };
 
 export const productApi = {

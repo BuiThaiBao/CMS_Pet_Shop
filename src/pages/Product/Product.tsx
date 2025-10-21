@@ -3,10 +3,12 @@ import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
 import productApi from "../../services/api/productApi";
+import ProductDetailModal from "../../components/Product/ProductDetailModal";
+import ProductImageUploadModal from "../../components/Product/ProductImageUploadModal";
 
 export type ProductItem = {
   id: number;
-  categoryId?: number;
+  categoryName?: string;
   name: string;
   shortDescription?: string;
   description?: string;
@@ -35,6 +37,12 @@ export default function Product() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     "asc"
   );
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(
+    null
+  );
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadProductId, setUploadProductId] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -143,7 +151,7 @@ export default function Product() {
           : field === "isDeleted" && newValue === "1"
           ? "0"
           : (current.isFeatured as "0" | "1" | undefined) ?? "0";
-      const payload = {
+      const payload: any = {
         name: current.name,
         shortDescription: current.shortDescription ?? "",
         description: current.description ?? "",
@@ -153,8 +161,11 @@ export default function Product() {
         isDeleted: (field === "isDeleted"
           ? newValue
           : (current.isDeleted as "0" | "1" | undefined) ?? "0") as "0" | "1",
-        categoryId: current.categoryId,
       };
+      // Only include categoryName if it exists
+      if (current.categoryName !== undefined && current.categoryName !== null) {
+        payload.categoryName = current.categoryName;
+      }
       await productApi.update(id, payload);
     } catch (err: any) {
       setItems(prevItems);
@@ -166,10 +177,29 @@ export default function Product() {
     }
   }
 
-  const formatCurrency = (v: any) => {
-    const n = Number(v);
-    if (Number.isNaN(n)) return String(v ?? "");
-    return n.toLocaleString(undefined, { style: "currency", currency: "VND" });
+  const handleViewDetail = (productId: number) => {
+    setSelectedProductId(productId);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedProductId(null);
+  };
+
+  const handleOpenUploadModal = (productId: number) => {
+    setUploadProductId(productId);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleCloseUploadModal = () => {
+    setIsUploadModalOpen(false);
+    setUploadProductId(null);
+  };
+
+  const handleUploadSuccess = () => {
+    // Refresh product list or detail modal
+    fetchProducts(pageNumber, pageSize, query);
   };
 
   return (
@@ -335,7 +365,9 @@ export default function Product() {
                           <div className="font-medium">{p.name}</div>
                           <div className="text-xs text-gray-400">
                             ID: {p.id}{" "}
-                            {p.categoryId ? `• Category #${p.categoryId}` : ""}
+                            {p.categoryName
+                              ? `• Category: ${p.categoryName}`
+                              : ""}
                           </div>
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600 max-w-[360px] truncate">
@@ -378,8 +410,11 @@ export default function Product() {
                           {p.updatedDate}
                         </td>
                         <td className="py-4 px-4">
-                          <button className="text-sm text-brand-500" disabled>
-                            Edit
+                          <button
+                            className="text-sm text-brand-500 hover:text-brand-600 hover:underline"
+                            onClick={() => handleViewDetail(p.id)}
+                          >
+                            Detail
                           </button>
                         </td>
                       </tr>
@@ -474,6 +509,22 @@ export default function Product() {
           </div>
         </div>
       </div>
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        productId={selectedProductId}
+        onOpenUpload={handleOpenUploadModal}
+      />
+
+      {/* Product Image Upload Modal */}
+      <ProductImageUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={handleCloseUploadModal}
+        productId={uploadProductId}
+        onUploadSuccess={handleUploadSuccess}
+      />
     </>
   );
 }
