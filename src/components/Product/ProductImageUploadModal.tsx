@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Modal } from "../ui/modal";
 import Alert from "../ui/alert/Alert";
-import { getToken } from "../../services/api/tokenStorage";
+import imageApi from "../../services/api/imageApi";
 
 interface ProductImageUploadModalProps {
   isOpen: boolean;
@@ -72,42 +72,10 @@ export default function ProductImageUploadModal({
     setUploadedImages([]);
 
     try {
-      const token = getToken();
+      // Create positions array
+      const positions = selectedFiles.map((_, index) => index + 1);
 
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
-
-      // Create single FormData with all files and positions
-      const formData = new FormData();
-
-      // Append all files
-      selectedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      // Append all positions
-      selectedFiles.forEach((_, index) => {
-        formData.append("positions", String(index + 1));
-      });
-
-      const response = await fetch(
-        `http://localhost:8080/api/v1/images/upload/${productId}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to upload images");
-      }
-
-      const data = await response.json();
+      const data = await imageApi.upload(productId, selectedFiles, positions);
       const results = data.result || [];
 
       // Set uploaded images

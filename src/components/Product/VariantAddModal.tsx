@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal } from "../ui/modal";
-import { getToken } from "../../services/api/tokenStorage";
+import variantApi from "../../services/api/variantApi";
 
 type ProductImage = {
   id: number;
@@ -81,7 +81,6 @@ export default function VariantAddModal({
     setAdding(true);
 
     try {
-      const token = getToken();
       const payload = {
         productId,
         productImageId: Number(selectedImageId),
@@ -91,18 +90,10 @@ export default function VariantAddModal({
         stockQuantity: Number(stockQuantity),
       };
 
-      const response = await fetch("http://localhost:8080/api/v1/variants", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await variantApi.create(payload);
+      const data = response?.data;
 
-      const data = await response.json();
-
-      if (response.ok && data.code === 1000) {
+      if (data?.success || data?.code === 1000) {
         setSuccess(true);
         setTimeout(() => {
           if (onAddSuccess) {
@@ -111,11 +102,11 @@ export default function VariantAddModal({
           handleClose();
         }, 1500);
       } else {
-        setError(data.message || "Failed to add variant");
+        setError(data?.message || "Failed to add variant");
       }
     } catch (err: any) {
       console.error("Add variant error:", err);
-      setError(err.message || "An error occurred while adding variant");
+      setError(err?.message || "An error occurred while adding variant");
     } finally {
       setAdding(false);
     }

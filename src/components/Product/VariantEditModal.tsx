@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Modal } from "../ui/modal";
-import { getToken } from "../../services/api/tokenStorage";
+import variantApi from "../../services/api/variantApi";
 
 type ProductImage = {
   id: number;
@@ -92,7 +92,6 @@ export default function VariantEditModal({
     setUpdating(true);
 
     try {
-      const token = getToken();
       const payload = {
         variantName: variantName.trim(),
         productImageId: Number(selectedImageId),
@@ -102,21 +101,10 @@ export default function VariantEditModal({
         isDeleted: variant.isDeleted, // Keep current deleted status
       };
 
-      const response = await fetch(
-        `http://localhost:8080/api/v1/variants/${variant.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await variantApi.update(variant.id, payload);
+      const data = response?.data;
 
-      const data = await response.json();
-
-      if (response.ok && data.code === 1000) {
+      if (data?.success || data?.code === 1000) {
         setSuccess(true);
         setTimeout(() => {
           if (onUpdateSuccess) {
@@ -125,11 +113,11 @@ export default function VariantEditModal({
           handleClose();
         }, 1500);
       } else {
-        setError(data.message || "Failed to update variant");
+        setError(data?.message || "Failed to update variant");
       }
     } catch (err: any) {
       console.error("Update variant error:", err);
-      setError(err.message || "An error occurred while updating variant");
+      setError(err?.message || "An error occurred while updating variant");
     } finally {
       setUpdating(false);
     }

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Modal } from "../ui/modal";
 import productApi from "../../services/api/productApi";
+import variantApi from "../../services/api/variantApi";
 import ImageModal from "../common/ImageModal";
 import ImageEditModal from "./ImageEditModal";
 import VariantAddModal from "./VariantAddModal";
 import VariantEditModal from "./VariantEditModal";
-import { getToken } from "../../services/api/tokenStorage";
 
 type ProductImage = {
   id: number;
@@ -201,7 +201,6 @@ export default function ProductDetailModal({
     }
 
     try {
-      const token = getToken();
       const payload = {
         variantName: variant.variantName,
         weight: variant.weight || null,
@@ -211,21 +210,10 @@ export default function ProductDetailModal({
         isDeleted: newDeletedStatus,
       };
 
-      const response = await fetch(
-        `http://localhost:8080/api/v1/variants/${variant.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await variantApi.update(variant.id, payload);
+      const data = response?.data;
 
-      const data = await response.json();
-
-      if (!response.ok || data.code !== 1000) {
+      if (!data?.success && data?.code !== 1000) {
         // Nếu API lỗi, revert lại state
         if (product) {
           const revertedVariants = product.productVariant?.map((v) =>
@@ -236,7 +224,7 @@ export default function ProductDetailModal({
             productVariant: revertedVariants,
           });
         }
-        setError(data.message || "Failed to update variant status");
+        setError(data?.message || "Failed to update variant status");
       }
     } catch (err: any) {
       console.error("Toggle variant deleted error:", err);
@@ -250,7 +238,7 @@ export default function ProductDetailModal({
           productVariant: revertedVariants,
         });
       }
-      setError(err.message || "An error occurred");
+      setError(err?.message || "An error occurred");
     } finally {
       setTogglingVariantId(null);
     }

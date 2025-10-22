@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "../ui/modal";
 import Alert from "../ui/alert/Alert";
-import { getToken } from "../../services/api/tokenStorage";
+import imageApi from "../../services/api/imageApi";
 
 type ImageEditData = {
   id: number;
@@ -50,40 +50,27 @@ export default function ImageEditModal({
     setSuccess(null);
 
     try {
-      const token = getToken();
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
+      const payload = {
+        imageUrl: image.imageUrl,
+        position: position,
+        isPrimary: isPrimary ? 1 : 0,
+        isDeleted: isDeleted ? "1" : "0",
+      };
 
-      const response = await fetch(
-        `http://localhost:8080/api/v1/images/${image.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            imageUrl: image.imageUrl,
-            position: position,
-            isPrimary: isPrimary ? 1 : 0,
-            isDeleted: isDeleted ? "1" : "0",
-          }),
+      const response = await imageApi.update(image.id, payload);
+      const data = response?.data;
+
+      if (data?.success || data?.code === 1000) {
+        setSuccess("Image updated successfully!");
+
+        if (onUpdateSuccess) {
+          setTimeout(() => {
+            onUpdateSuccess();
+            onClose();
+          }, 1000);
         }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to update image");
-      }
-
-      setSuccess("Image updated successfully!");
-
-      if (onUpdateSuccess) {
-        setTimeout(() => {
-          onUpdateSuccess();
-          onClose();
-        }, 1000);
+      } else {
+        setError(data?.message || "Failed to update image");
       }
     } catch (err: any) {
       console.error("Update error:", err);

@@ -5,7 +5,7 @@ interface SwitchProps {
   defaultChecked?: boolean;
   disabled?: boolean;
   onChange?: (checked: boolean) => void;
-  color?: "blue" | "gray"; // Added prop to toggle color theme
+  color?: "blue" | "gray" | "green" | "red"; // Added prop to toggle color theme
 }
 
 const Switch: React.FC<SwitchProps> = ({
@@ -32,6 +32,22 @@ const Switch: React.FC<SwitchProps> = ({
           background: isChecked
             ? "bg-brand-500 "
             : "bg-gray-200 dark:bg-white/10", // Blue version
+          knob: isChecked
+            ? "translate-x-full bg-white"
+            : "translate-x-0 bg-white",
+        }
+      : color === "green"
+      ? {
+          background: isChecked
+            ? "bg-green-500"
+            : "bg-gray-200 dark:bg-white/10", // Green version
+          knob: isChecked
+            ? "translate-x-full bg-white"
+            : "translate-x-0 bg-white",
+        }
+      : color === "red"
+      ? {
+          background: "bg-red-500", // Red version - always red (both ON and OFF)
           knob: isChecked
             ? "translate-x-full bg-white"
             : "translate-x-0 bg-white",

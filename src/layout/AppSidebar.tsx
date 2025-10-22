@@ -53,6 +53,14 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    icon: <GridIcon />,
+    name: "Service",
+    subItems: [
+      { name: "Service List", path: "/service" },
+      { name: "Add Service", path: "/service/add" },
+    ],
+  },
+  {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/profile",

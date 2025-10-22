@@ -673,37 +673,70 @@ function Category() {
                           {c.description}
                         </td>
                         <td className="py-4 px-4 text-sm">
-                          <Switch
-                            key={`feat-${c.id}-${c.isFeatured}`}
-                            label=""
-                            color="blue"
-                            disabled={updatingIds.has(c.id)}
-                            defaultChecked={c.isFeatured === "1"}
-                            onChange={(checked) =>
-                              handleToggleField(c.id, "isFeatured", checked)
-                            }
-                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              key={`feat-${c.id}-${c.isFeatured}`}
+                              label=""
+                              color={c.isFeatured === "1" ? "green" : "gray"}
+                              disabled={updatingIds.has(c.id)}
+                              defaultChecked={c.isFeatured === "1"}
+                              onChange={(checked) =>
+                                handleToggleField(c.id, "isFeatured", checked)
+                              }
+                            />
+                            <span
+                              className={`text-sm font-medium ${
+                                c.isFeatured === "1"
+                                  ? "text-green-600"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {c.isFeatured === "1" ? "Yes" : "No"}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-4 px-4 text-sm">
-                          <Switch
-                            key={`del-${c.id}-${c.isDeleted}`}
-                            label=""
-                            color="blue"
-                            disabled={updatingIds.has(c.id)}
-                            defaultChecked={c.isDeleted === "1"}
-                            onChange={(checked) =>
-                              handleToggleField(c.id, "isDeleted", checked)
-                            }
-                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              key={`del-${c.id}-${c.isDeleted}`}
+                              label=""
+                              color={c.isDeleted === "0" ? "green" : "red"}
+                              disabled={updatingIds.has(c.id)}
+                              defaultChecked={c.isDeleted === "0"}
+                              onChange={(checked) =>
+                                handleToggleField(c.id, "isDeleted", !checked)
+                              }
+                            />
+                            <span
+                              className={`text-sm font-medium ${
+                                c.isDeleted === "0"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {c.isDeleted === "0" ? "Active" : "Deleted"}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
                           {c.createdDate}
                         </td>
                         <td className="py-4 px-4">
                           <button
-                            className="text-sm text-brand-500"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                             onClick={() => openEditModal(c.id)}
                           >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                             Edit
                           </button>
                         </td>

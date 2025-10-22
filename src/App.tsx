@@ -24,6 +24,10 @@ import CategoryAdd from "./pages/Category/CategoryAdd";
 import CategoryEdit from "./pages/Category/CategoryEdit";
 import Product from "./pages/Product/Product";
 import ProductAdd from "./pages/Product/ProductAdd";
+import ProductEdit from "./pages/Product/ProductEdit";
+import Service from "./pages/Service/Service";
+import ServiceAdd from "./pages/Service/ServiceAdd";
+import ServiceEdit from "./pages/Service/ServiceEdit";
 
 export default function App() {
   return (
@@ -49,6 +53,10 @@ export default function App() {
             <Route path="/category/edit/:id" element={<CategoryEdit />} />
             <Route path="/product" element={<Product />} />
             <Route path="/product/add" element={<ProductAdd />} />
+            <Route path="/product/edit/:id" element={<ProductEdit />} />
+            <Route path="/service" element={<Service />} />
+            <Route path="/service/add" element={<ServiceAdd />} />
+            <Route path="/service/edit/:id" element={<ServiceEdit />} />
             <Route path="/blank" element={<Blank />} />
 
             {/* Forms */}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
@@ -23,6 +24,7 @@ export type ProductItem = {
 };
 
 export default function Product() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<ProductItem[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -380,28 +382,50 @@ export default function Product() {
                           {p.stockQuantity ?? p.stock ?? 0}
                         </td>
                         <td className="py-4 px-4 text-sm">
-                          <Switch
-                            key={`feat-${p.id}-${p.isFeatured}`}
-                            label=""
-                            color="blue"
-                            disabled={updatingIds.has(p.id)}
-                            defaultChecked={p.isFeatured === "1"}
-                            onChange={(checked) =>
-                              handleToggleField(p.id, "isFeatured", checked)
-                            }
-                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              key={`feat-${p.id}-${p.isFeatured}`}
+                              label=""
+                              color={p.isFeatured === "1" ? "green" : "gray"}
+                              disabled={updatingIds.has(p.id)}
+                              defaultChecked={p.isFeatured === "1"}
+                              onChange={(checked) =>
+                                handleToggleField(p.id, "isFeatured", checked)
+                              }
+                            />
+                            <span
+                              className={`text-sm font-medium ${
+                                p.isFeatured === "1"
+                                  ? "text-green-600"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {p.isFeatured === "1" ? "Yes" : "No"}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-4 px-4 text-sm">
-                          <Switch
-                            key={`del-${p.id}-${p.isDeleted}`}
-                            label=""
-                            color="blue"
-                            disabled={updatingIds.has(p.id)}
-                            defaultChecked={p.isDeleted === "1"}
-                            onChange={(checked) =>
-                              handleToggleField(p.id, "isDeleted", checked)
-                            }
-                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              key={`del-${p.id}-${p.isDeleted}`}
+                              label=""
+                              color={p.isDeleted === "0" ? "green" : "red"}
+                              disabled={updatingIds.has(p.id)}
+                              defaultChecked={p.isDeleted === "0"}
+                              onChange={(checked) =>
+                                handleToggleField(p.id, "isDeleted", !checked)
+                              }
+                            />
+                            <span
+                              className={`text-sm font-medium ${
+                                p.isDeleted === "0"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {p.isDeleted === "0" ? "Active" : "Deleted"}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
                           {p.createdDate}
@@ -410,12 +434,44 @@ export default function Product() {
                           {p.updatedDate}
                         </td>
                         <td className="py-4 px-4">
-                          <button
-                            className="text-sm text-brand-500 hover:text-brand-600 hover:underline"
-                            onClick={() => handleViewDetail(p.id)}
-                          >
-                            Detail
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                              onClick={() => navigate(`/product/edit/${p.id}`)}
+                              title="Edit product information"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+                              onClick={() => handleViewDetail(p.id)}
+                              title="View details, manage variants & images"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                              Details
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
