@@ -17,6 +17,10 @@ export default function SignInForm() {
     password: "",
   });
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    identifier: "",
+    password: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,11 +29,59 @@ export default function SignInForm() {
       ...prev,
       [name]: value,
     }));
+    // Clear field error when user types
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {
+      identifier: "",
+      password: "",
+    };
+    let isValid = true;
+
+    // Validate identifier (email or username) - không được để trống
+    if (!formData.identifier.trim()) {
+      errors.identifier = "Username or Email is required";
+      isValid = false;
+    }
+
+    // Validate password theo backend:
+    // - Không được để trống
+    // - Tối thiểu 6 ký tự
+    // - Phải chứa ít nhất: 1 chữ thường (a-z), 1 chữ HOA (A-Z), 1 số (0-9), 1 ký tự đặc biệt
+    if (!formData.password) {
+      errors.password = "Password is required";
+      isValid = false;
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+      isValid = false;
+    } else {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        errors.password = "Password must contain at least 1 lowercase, 1 uppercase, 1 number, and 1 special character";
+        isValid = false;
+      }
+    }
+
+    setFieldErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -79,6 +131,11 @@ export default function SignInForm() {
                     onChange={handleInputChange}
                     placeholder="info@gmail.com"
                   />
+                  {fieldErrors.identifier && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {fieldErrors.identifier}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label>
@@ -103,6 +160,11 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                  {fieldErrors.password && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {fieldErrors.password}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
 import categoryApi from "../../services/api/categoryApi";
 
 export default function CategoryAdd() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isFeatured, setIsFeatured] = useState<"0" | "1">("0");
@@ -26,9 +28,10 @@ export default function CategoryAdd() {
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
         setMessage("Create category successfully");
-        setName("");
-        setDescription("");
-        setIsFeatured("0");
+        // Tự động quay lại trang list sau 1 giây
+        setTimeout(() => {
+          navigate("/category");
+        }, 1000);
       } else {
         setError(data?.message || "Unknown response");
       }
@@ -84,6 +87,22 @@ export default function CategoryAdd() {
             />
           </div>
 
+          <div className="mt-4 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isFeatured"
+              checked={isFeatured === "1"}
+              onChange={(e) => setIsFeatured(e.target.checked ? "1" : "0")}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label
+              htmlFor="isFeatured"
+              className="text-sm text-gray-700 cursor-pointer"
+            >
+              Featured Category
+            </label>
+          </div>
+
           <div className="mt-4 flex items-center gap-3">
             <Button
               size="md"
@@ -97,14 +116,9 @@ export default function CategoryAdd() {
               size="md"
               variant="outline"
               type="button"
-              onClick={() => {
-                setName("");
-                setDescription("");
-                setIsFeatured("0");
-              }}
+              onClick={() => navigate("/category")}
             >
-              {/* Nút reset để xoá dữ liệu trong form */}
-              Reset
+              Cancel
             </Button>
           </div>
         </form>

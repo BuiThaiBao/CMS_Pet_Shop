@@ -118,19 +118,19 @@ export const authApi = {
       const nowSec = Math.floor(Date.now() / 1000);
       const exp = decoded?.exp;
 
-      // Luôn refresh trước khi hết hạn ~60 giây
-      const leadTimeSec = 60;
-      let delaySec = 60; // fallback nếu không đọc được exp/remaining nhỏ
+      // Token có thời gian sống 3600s (1h), refresh trước khi hết hạn ~5 phút (300s)
+      const leadTimeSec = 300;
+      let delaySec = 300; // fallback nếu không đọc được exp/remaining nhỏ
       if (exp && exp > nowSec) {
         const remaining = exp - nowSec;
         if (remaining > leadTimeSec) {
           delaySec = remaining - leadTimeSec;
-        } else if (remaining > 5) {
+        } else if (remaining > 30) {
           // Nếu còn rất ít thời gian, refresh sớm hơn một chút để an toàn
-          delaySec = Math.max(1, remaining - 5);
+          delaySec = Math.max(5, remaining - 30);
         } else {
           // Hết hạn rất gần -> refresh gần như ngay lập tức
-          delaySec = 1;
+          delaySec = 5;
         }
       }
 
@@ -146,14 +146,14 @@ export const authApi = {
         "scheduleRefresh decode failed:",
         (err as any)?.message || err
       );
-      // Fallback: thử refresh sau 60s
+      // Fallback: thử refresh sau 5 phút
       _refreshTimer = setTimeout(async () => {
         try {
           await this.refreshToken();
         } catch (e) {
           console.warn("Auto refresh error:", e);
         }
-      }, 60 * 1000);
+      }, 300 * 1000);
     }
   },
 

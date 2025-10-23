@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
@@ -19,6 +20,7 @@ type CategoryItem = {
 };
 
 function Category() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -443,6 +445,24 @@ function Category() {
             <h1 className="text-xl font-semibold">Category List</h1>
             <p className="mt-2 text-sm text-gray-600">Manage categories</p>
           </div>
+          <Button
+            size="md"
+            onClick={() => navigate("/category/add")}
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Category
+          </Button>
         </div>
 
         <div className="mt-4 bg-white rounded-lg border">
