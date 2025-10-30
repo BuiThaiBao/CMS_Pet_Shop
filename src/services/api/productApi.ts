@@ -22,6 +22,7 @@ export const productApi = {
       size: number;
       search?: string;
       sort?: string;
+      categoryId?: number | string;
     },
     options?: { signal?: AbortSignal }
   ) {

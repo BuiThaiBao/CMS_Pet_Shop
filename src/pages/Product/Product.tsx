@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
+import Select from "../../components/form/Select";
 import productApi from "../../services/api/productApi";
+import categoryApi from "../../services/api/categoryApi";
 import ProductDetailModal from "../../components/Product/ProductDetailModal";
 import ProductImageUploadModal from "../../components/Product/ProductImageUploadModal";
 
 export type ProductItem = {
   id: number;
+  categoryId?: number;
   categoryName?: string;
   name: string;
   shortDescription?: string;
@@ -46,6 +49,31 @@ export default function Product() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadProductId, setUploadProductId] = useState<number | null>(null);
 
+  // Category filter states
+  const [categories, setCategories] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await categoryApi.list({
+          pageNumber: 1,
+          size: 1000, // Get all categories
+        });
+        const data = res?.data?.result ?? res?.data;
+        if (data?.content) {
+          setCategories(data.content);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    };
+    loadCategories();
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -57,7 +85,7 @@ export default function Product() {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNumber, pageSize, query, sortDirection]);
+  }, [pageNumber, pageSize, query, sortDirection, selectedCategoryId]);
 
   async function fetchProducts(page: number, size: number, q?: string) {
     setLoading(true);
@@ -75,11 +103,13 @@ export default function Product() {
         size: number;
         search?: string;
         sort?: string;
+        categoryId?: number;
       } = {
         pageNumber: page,
         size,
         search: q ?? undefined,
         sort: sortDirection ? `name,${sortDirection}` : undefined,
+        categoryId: selectedCategoryId ? Number(selectedCategoryId) : undefined,
       };
       const res = await productApi.list(params, { signal: controller.signal });
       const data = res?.data?.result ?? res?.data;
@@ -164,9 +194,9 @@ export default function Product() {
           ? newValue
           : (current.isDeleted as "0" | "1" | undefined) ?? "0") as "0" | "1",
       };
-      // Only include categoryName if it exists
-      if (current.categoryName !== undefined && current.categoryName !== null) {
-        payload.categoryName = current.categoryName;
+      // Include categoryId if it exists
+      if (current.categoryId !== undefined && current.categoryId !== null) {
+        payload.categoryId = current.categoryId;
       }
       await productApi.update(id, payload);
     } catch (err: any) {
@@ -222,54 +252,81 @@ export default function Product() {
           )}
           <div className="p-4">
             <div className="mb-4 flex items-center justify-between gap-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">
-                  Products List
-                </label>
-                <div className="relative w-80">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
-                      <circle cx="11" cy="11" r="7" />
-                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                  </span>
-                  <input
-                    type="search"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="Search..."
-                    aria-label="Search products"
-                    className="w-full pl-11 pr-10 py-2 rounded-lg border focus:outline-none focus:ring"
-                  />
-                  {loading && (
-                    <span className="absolute inset-y-0 right-3 flex items-center">
+              <div className="flex items-center gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Search Products
+                  </label>
+                  <div className="relative w-80">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                       <svg
-                        className="animate-spin h-5 w-5 text-gray-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
                         viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
                       >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                        ></path>
+                        <circle cx="11" cy="11" r="7" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
                       </svg>
                     </span>
-                  )}
+                    <input
+                      type="search"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder="Search..."
+                      aria-label="Search products"
+                      className="w-full pl-11 pr-10 py-2 rounded-lg border focus:outline-none focus:ring"
+                    />
+                    {loading && (
+                      <span className="absolute inset-y-0 right-3 flex items-center">
+                        <svg
+                          className="animate-spin h-5 w-5 text-gray-500"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          ></path>
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Filter by Category
+                  </label>
+                  <div className="w-64">
+                    <Select
+                      options={[
+                        { value: "", label: "All Categories" },
+                        ...categories.map((cat) => ({
+                          value: String(cat.id),
+                          label: cat.name,
+                        })),
+                      ]}
+                      placeholder="Select category"
+                      defaultValue={selectedCategoryId}
+                      onChange={(value) => {
+                        setSelectedCategoryId(value);
+                        setPageNumber(1); // Reset to first page when filter changes
+                      }}
+                      dropdown={true}
+                      searchable={true}
+                      searchInTrigger={true}
+                    />
+                  </div>
                 </div>
               </div>
               <div />
