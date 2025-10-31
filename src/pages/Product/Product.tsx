@@ -8,6 +8,7 @@ import productApi from "../../services/api/productApi";
 import categoryApi from "../../services/api/categoryApi";
 import ProductDetailModal from "../../components/Product/ProductDetailModal";
 import ProductImageUploadModal from "../../components/Product/ProductImageUploadModal";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export type ProductItem = {
   id: number;
@@ -36,8 +37,8 @@ export default function Product() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
-  const [query, setQuery] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
+  const debouncedSearchInput = useDebounce(searchInput, 500);
   const abortRef = useRef<AbortController | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     "asc"
@@ -78,14 +79,20 @@ export default function Product() {
     let mounted = true;
     const load = async () => {
       if (!mounted) return;
-      await fetchProducts(pageNumber, pageSize, query);
+      await fetchProducts(pageNumber, pageSize, debouncedSearchInput.trim());
     };
     load();
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNumber, pageSize, query, sortDirection, selectedCategoryId]);
+  }, [
+    pageNumber,
+    pageSize,
+    debouncedSearchInput,
+    sortDirection,
+    selectedCategoryId,
+  ]);
 
   async function fetchProducts(page: number, size: number, q?: string) {
     setLoading(true);
@@ -144,14 +151,6 @@ export default function Product() {
       abortRef.current = null;
     }
   }
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setPageNumber(1);
-      setQuery(searchInput.trim());
-    }, 150);
-    return () => clearTimeout(t);
-  }, [searchInput]);
 
   async function handleToggleField(
     id: number,
@@ -231,7 +230,7 @@ export default function Product() {
 
   const handleUploadSuccess = () => {
     // Refresh product list or detail modal
-    fetchProducts(pageNumber, pageSize, query);
+    fetchProducts(pageNumber, pageSize, debouncedSearchInput.trim());
   };
 
   return (

@@ -8,6 +8,7 @@ import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
+import { useDebounce } from "../../hooks/useDebounce";
 
 type CategoryItem = {
   id: number;
@@ -29,8 +30,8 @@ function Category() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set()); // theo dõi id đang cập nhật
-  const [query, setQuery] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
+  const debouncedSearchInput = useDebounce(searchInput, 300);
   const abortRef = useRef<AbortController | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     "asc"
@@ -89,12 +90,23 @@ function Category() {
     let mounted = true;
     const load = async () => {
       if (!mounted) return;
+      const trimmedSearch = debouncedSearchInput.trim();
       if (filterFeatured === "1" || filterFeatured === "0") {
-        await fetchFeatured(pageNumber, pageSize, filterFeatured as "1" | "0");
+        await fetchFeatured(
+          pageNumber,
+          pageSize,
+          filterFeatured as "1" | "0",
+          trimmedSearch
+        );
       } else if (filterDeleted === "1" || filterDeleted === "0") {
-        await fetchDeleted(pageNumber, pageSize, filterDeleted as "1" | "0");
+        await fetchDeleted(
+          pageNumber,
+          pageSize,
+          filterDeleted as "1" | "0",
+          trimmedSearch
+        );
       } else {
-        await fetchCategories(pageNumber, pageSize, query);
+        await fetchCategories(pageNumber, pageSize, trimmedSearch);
       }
     };
     load();
@@ -105,7 +117,7 @@ function Category() {
   }, [
     pageNumber,
     pageSize,
-    query,
+    debouncedSearchInput,
     sortDirection,
     filterFeatured,
     filterDeleted,
@@ -180,20 +192,12 @@ function Category() {
     }
   }
 
-  // Trì hoãn (debounce) việc cập nhật query từ ô tìm kiếm để giảm số lần gọi API
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setPageNumber(1);
-      setQuery(searchInput.trim());
-    }, 150);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
   // Gọi API POST x-www-form-urlencoded /categories/feature với isFeature=1|0
   async function fetchFeatured(
     page: number,
     size: number,
-    isFeature: "1" | "0"
+    isFeature: "1" | "0",
+    search?: string
   ) {
     setLoading(true);
     setError(null);
@@ -211,7 +215,7 @@ function Category() {
           size,
           isFeature,
           sort: sortDirection ? `name,${sortDirection}` : undefined,
-          search: query || undefined,
+          search: search || undefined,
         },
         { signal: controller.signal }
       );
@@ -253,7 +257,8 @@ function Category() {
   async function fetchDeleted(
     page: number,
     size: number,
-    isDeleted: "1" | "0"
+    isDeleted: "1" | "0",
+    search?: string
   ) {
     setLoading(true);
     setError(null);
@@ -271,7 +276,7 @@ function Category() {
           size,
           isDeleted,
           sort: sortDirection ? `name,${sortDirection}` : undefined,
-          search: query || undefined,
+          search: search || undefined,
         },
         { signal: controller.signal }
       );
