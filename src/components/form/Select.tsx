@@ -17,6 +17,7 @@ interface SelectProps {
   searchable?: boolean;
   showSearchInput?: boolean; // control rendering a visible search input (defaults to hidden)
   searchInTrigger?: boolean; // show typed characters directly in the main control
+  required?: boolean;
 }
 
 const ITEM_HEIGHT = 40; // px, for dropdown max-height calculation
@@ -33,6 +34,7 @@ const Select: React.FC<SelectProps> = ({
   searchable = false,
   showSearchInput = false,
   searchInTrigger = false,
+  required = false,
 }) => {
   const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
   const [open, setOpen] = useState<boolean>(false);
@@ -193,7 +195,7 @@ const Select: React.FC<SelectProps> = ({
               if (!open) setSearchQuery("");
             }}
             onKeyDown={handleTriggerKeyDown}
-            className={`${heightClass} w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-10 text-left text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
+            className={`${heightClass} w-full rounded-xl border border-gray-300 bg-transparent px-4 py-2.5 pr-10 text-left text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
               selectedValue
                 ? "text-gray-800 dark:text-white/90"
                 : "text-gray-400 dark:text-gray-400"
@@ -218,7 +220,7 @@ const Select: React.FC<SelectProps> = ({
           </button>
         )}
         {open && (
-          <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg">
+          <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg">
             {searchable && showSearchInput && (
               <div className="px-3 pt-2 pb-1 border-b border-gray-100 dark:border-gray-800">
                 <input
@@ -237,7 +239,7 @@ const Select: React.FC<SelectProps> = ({
               style={maxHeight ? { maxHeight } : undefined}
             >
               {filteredOptions.length === 0 && (
-                <li className="px-3 py-2 text-gray-400 text-sm select-none">
+                <li className="px-4 py-2 text-gray-400 text-sm select-none">
                   No results
                 </li>
               )}
@@ -251,7 +253,7 @@ const Select: React.FC<SelectProps> = ({
                     aria-selected={selected}
                     onMouseEnter={() => setActiveIndex(idx)}
                     onClick={() => commitSelection(option.value)}
-                    className={`px-3 py-2 cursor-pointer text-sm hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                    className={`px-4 py-2 cursor-pointer text-sm hover:bg-gray-50 dark:hover:bg-gray-800 ${
                       active ? "bg-gray-100 dark:bg-gray-800" : ""
                     }`}
                   >
@@ -274,7 +276,7 @@ const Select: React.FC<SelectProps> = ({
 
   return (
     <select
-      className={`${heightClass} w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
+      className={`${heightClass} w-full rounded-xl border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
         selectedValue
           ? "text-gray-800 dark:text-white/90"
           : "text-gray-400 dark:text-gray-400"
@@ -282,6 +284,7 @@ const Select: React.FC<SelectProps> = ({
       value={selectedValue}
       onChange={handleChange}
       size={rows && rows > 1 ? rows : undefined}
+      required={required}
     >
       <option
         value=""

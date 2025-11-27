@@ -4,6 +4,7 @@ import PageMeta from "../../components/common/PageMeta";
 import serviceApi from "../../services/api/serviceApi";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
+import Select from "../../components/form/Select";
 
 export default function ServiceEdit() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,14 @@ export default function ServiceEdit() {
   const [loadingData, setLoadingData] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const serviceOptions = [
+    { value: "veterinary", label: "Dịch vụ thú y" },
+    { value: "grooming", label: "Chăm sóc/ Tắm rửa" },
+    { value: "haircut", label: "Cắt tỉa lông" },
+    { value: "vaccination", label: "Tiêm chủng" },
+    { value: "petboarding", label: "Lưu trú thú cưng" },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -118,14 +127,15 @@ export default function ServiceEdit() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Service Name *
+                Tên dịch vụ *
               </label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+              <Select
+                options={serviceOptions}
+                onChange={setName}
+                defaultValue={name}
+                placeholder="Chọn loại dịch vụ"
                 required
-                className="w-full border rounded px-3 py-2"
-                placeholder="Enter service name"
+                dropdown
               />
             </div>
             <div>
