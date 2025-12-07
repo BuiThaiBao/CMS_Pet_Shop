@@ -25,6 +25,7 @@ import CategoryEdit from "./pages/Category/CategoryEdit";
 import Product from "./pages/Product/Product";
 import ProductAdd from "./pages/Product/ProductAdd";
 import ProductEdit from "./pages/Product/ProductEdit";
+import ProductCreateAllInOne from "./pages/Product/ProductCreateAllInOne";
 import Service from "./pages/Service/Service";
 import ServiceAdd from "./pages/Service/ServiceAdd";
 import ServiceEdit from "./pages/Service/ServiceEdit";
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/category/edit/:id" element={<CategoryEdit />} />
             <Route path="/product" element={<Product />} />
             <Route path="/product/add" element={<ProductAdd />} />
+            <Route path="/product/add-all-in-one" element={<ProductCreateAllInOne />} />
             <Route path="/product/edit/:id" element={<ProductEdit />} />
             <Route path="/service" element={<Service />} />
             <Route path="/service/add" element={<ServiceAdd />} />

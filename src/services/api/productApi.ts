@@ -14,6 +14,27 @@ export type ProductPayload = {
   categoryName?: string; // New field
 };
 
+export type CreateProductAllInOnePayload = {
+  name: string;
+  categoryId: number;
+  shortDescription: string;
+  description: string;
+  featured: boolean;
+  images: Array<{
+    imageUrl: string;
+    publicId: string;
+    position: number;
+    primary: boolean;
+  }>;
+  variants: Array<{
+    variantName: string;
+    price: number;
+    weight: number;
+    stockQuantity: number;
+    associatedImageUrls: string[];
+  }>;
+};
+
 export const productApi = {
   // GET list with search/sort/pagination (1-based)
   list(
@@ -39,6 +60,10 @@ export const productApi = {
 
   update(id: number | string, body: ProductPayload) {
     return http.put(`/products/${id}`, body);
+  },
+
+  createAll(body: CreateProductAllInOnePayload) {
+    return http.post("/products/create-all", body);
   },
 };
 

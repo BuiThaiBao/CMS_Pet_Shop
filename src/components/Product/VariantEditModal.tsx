@@ -93,12 +93,13 @@ export default function VariantEditModal({
 
     try {
       const payload = {
+        productId: variant.productId,
         variantName: variantName.trim(),
         productImageId: Number(selectedImageId),
         weight: weight ? Number(weight) : null,
         price: Number(price),
         stockQuantity: Number(stockQuantity),
-        isDeleted: variant.isDeleted, // Keep current deleted status
+        isDeleted: variant.isDeleted,
       };
 
       const response = await variantApi.update(variant.id, payload);
