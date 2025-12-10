@@ -22,24 +22,29 @@ export type ProductImage = {
 export type Variant = {
   id: string;
   variantName: string;
-  price: number;
-  weight: number;
-  stockQuantity: number;
+  price: string;
+  weight: string;
+  stockQuantity: string;
   associatedImageUrls: string[];
 };
 
 export default function ProductCreateAllInOne() {
   const navigate = useNavigate();
-  
+
   // General info
   const [categoryId, setCategoryId] = useState<string>("");
+  const [catOptions, setCatOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const categoryName = (() => {
+    const option = catOptions.find((opt) => opt.value === categoryId);
+    return option ? option.label : "";
+  })();
   const [name, setName] = useState<string>("");
   const [shortDescription, setShortDescription] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [featured, setFeatured] = useState<boolean>(false);
-  const [catOptions, setCatOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+
   const [catLoading, setCatLoading] = useState<boolean>(false);
   const catAbortRef = useRef<AbortController | null>(null);
 
@@ -50,7 +55,6 @@ export default function ProductCreateAllInOne() {
 
   // Variants
   const [variants, setVariants] = useState<Variant[]>([]);
-
 
   // Form submission
   const [loading, setLoading] = useState(false);
@@ -103,12 +107,14 @@ export default function ProductCreateAllInOne() {
         // 5. Give it a name (e.g., "pet_shop", "ml_default", or any name you prefer)
         // 6. Save the preset
         // 7. Use that name below or set VITE_CLOUDINARY_UPLOAD_PRESET in .env file
-        
-        const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "di2a8fvuv";
+
+        const CLOUDINARY_CLOUD_NAME =
+          import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "di2a8fvuv";
         // IMPORTANT: This preset MUST be set to "Unsigned" mode in Cloudinary
         // If you see "Upload preset not found" error, create a new unsigned preset
         // or update this value to match your unsigned preset name
-        const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+        const CLOUDINARY_UPLOAD_PRESET =
+          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
 
         if (!CLOUDINARY_UPLOAD_PRESET) {
           throw new Error(
@@ -121,7 +127,9 @@ export default function ProductCreateAllInOne() {
           formData.append("file", file);
           formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
-          console.log(`Starting upload for file: ${file.name} with preset: ${CLOUDINARY_UPLOAD_PRESET}`);
+          console.log(
+            `Starting upload for file: ${file.name} with preset: ${CLOUDINARY_UPLOAD_PRESET}`
+          );
 
           return fetch(
             `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -131,23 +139,27 @@ export default function ProductCreateAllInOne() {
             }
           )
             .then((res) => {
-              console.log(`Upload response status: ${res.status} for ${file.name}`);
+              console.log(
+                `Upload response status: ${res.status} for ${file.name}`
+              );
               if (!res.ok) {
                 return res.json().then((errorData) => {
                   console.error("Cloudinary error response:", errorData);
-                  const errorMessage = errorData.error?.message || `Cloudinary upload failed with status ${res.status}`;
-                  
+                  const errorMessage =
+                    errorData.error?.message ||
+                    `Cloudinary upload failed with status ${res.status}`;
+
                   // Provide helpful error message for missing preset
                   if (errorMessage.includes("preset") || res.status === 400) {
                     throw new Error(
                       `Upload preset "${CLOUDINARY_UPLOAD_PRESET}" not found. ` +
-                      `Please create an unsigned upload preset with this name in your Cloudinary dashboard. ` +
-                      `Go to: Settings > Upload > Upload presets > Add upload preset. ` +
-                      `Set signing mode to "Unsigned" and name it "${CLOUDINARY_UPLOAD_PRESET}". ` +
-                      `Or set VITE_CLOUDINARY_UPLOAD_PRESET in your .env file to use a different preset name.`
+                        `Please create an unsigned upload preset with this name in your Cloudinary dashboard. ` +
+                        `Go to: Settings > Upload > Upload presets > Add upload preset. ` +
+                        `Set signing mode to "Unsigned" and name it "${CLOUDINARY_UPLOAD_PRESET}". ` +
+                        `Or set VITE_CLOUDINARY_UPLOAD_PRESET in your .env file to use a different preset name.`
                     );
                   }
-                  
+
                   throw new Error(errorMessage);
                 });
               }
@@ -156,8 +168,13 @@ export default function ProductCreateAllInOne() {
             .then((data) => {
               console.log(`Upload successful for ${file.name}:`, data);
               if (!data.secure_url || !data.public_id) {
-                console.error("Missing secure_url or public_id in response:", data);
-                throw new Error("Invalid response from Cloudinary - missing secure_url or public_id");
+                console.error(
+                  "Missing secure_url or public_id in response:",
+                  data
+                );
+                throw new Error(
+                  "Invalid response from Cloudinary - missing secure_url or public_id"
+                );
               }
               return {
                 secure_url: data.secure_url,
@@ -170,7 +187,10 @@ export default function ProductCreateAllInOne() {
         console.log(`Successfully uploaded ${uploadResults.length} images`);
 
         const newImages: ProductImage[] = uploadResults.map(
-          (result: { secure_url: string; public_id: string }, index: number) => ({
+          (
+            result: { secure_url: string; public_id: string },
+            index: number
+          ) => ({
             id: `img-${Date.now()}-${index}`,
             imageUrl: result.secure_url,
             publicId: result.public_id,
@@ -183,7 +203,9 @@ export default function ProductCreateAllInOne() {
         setMessage(`Successfully uploaded ${uploadResults.length} image(s)`);
       } catch (err: any) {
         console.error("Image upload exception:", err);
-        const errorMessage = err?.message || "Failed to upload images. Please check your Cloudinary configuration.";
+        const errorMessage =
+          err?.message ||
+          "Failed to upload images. Please check your Cloudinary configuration.";
         setUploadError(errorMessage);
       } finally {
         setUploadingImages(false);
@@ -211,9 +233,9 @@ export default function ProductCreateAllInOne() {
     const newVariant: Variant = {
       id: `variant-${Date.now()}`,
       variantName: "",
-      price: 0,
-      weight: 0,
-      stockQuantity: 0,
+      price: "",
+      weight: "",
+      stockQuantity: "",
       associatedImageUrls: [],
     };
     setVariants((prev) => [...prev, newVariant]);
@@ -275,10 +297,12 @@ export default function ProductCreateAllInOne() {
         if (!variant.variantName.trim()) {
           throw new Error("All variants must have a name");
         }
-        if (variant.price <= 0) {
-          throw new Error(`Variant "${variant.variantName}" must have a price > 0`);
+        if (Number(variant.price) <= 0) {
+          throw new Error(
+            `Variant "${variant.variantName}" must have a price > 0`
+          );
         }
-        if (variant.stockQuantity < 0) {
+        if (Number(variant.stockQuantity) < 0) {
           throw new Error(
             `Variant "${variant.variantName}" must have stock quantity >= 0`
           );
@@ -300,9 +324,9 @@ export default function ProductCreateAllInOne() {
         })),
         variants: variants.map((variant) => ({
           variantName: variant.variantName.trim(),
-          price: variant.price,
-          weight: variant.weight,
-          stockQuantity: variant.stockQuantity,
+          price: Number(variant.price) || 0,
+          weight: Number(variant.weight) || 0,
+          stockQuantity: Number(variant.stockQuantity) || 0,
           associatedImageUrls: variant.associatedImageUrls,
         })),
       };
@@ -314,7 +338,7 @@ export default function ProductCreateAllInOne() {
       const data = res?.data;
 
       // Check if request was successful (status 200-299)
-      const isSuccess = 
+      const isSuccess =
         (res?.status >= 200 && res?.status < 300) ||
         data?.success === true ||
         data?.code === 1000 ||
@@ -322,7 +346,9 @@ export default function ProductCreateAllInOne() {
 
       if (isSuccess) {
         setError(null); // Clear any previous errors
-        setMessage("Product created successfully with all variants and images!");
+        setMessage(
+          "Product created successfully with all variants and images!"
+        );
         reset();
         // Redirect to product list after 1.5 seconds
         setTimeout(() => {
@@ -334,7 +360,10 @@ export default function ProductCreateAllInOne() {
       }
     } catch (err: any) {
       setMessage(null); // Clear any previous success messages
-      const errorMessage = err?.response?.data?.message || err?.message || "Failed to create product";
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create product";
       setError(errorMessage);
       console.error("Submit error:", err);
     } finally {
@@ -402,8 +431,8 @@ export default function ProductCreateAllInOne() {
       variants.every(
         (v) =>
           v.variantName.trim() &&
-          v.price > 0 &&
-          v.stockQuantity >= 0
+          Number(v.price) > 0 &&
+          Number(v.stockQuantity) >= 0
       )
     );
   };
@@ -625,7 +654,8 @@ export default function ProductCreateAllInOne() {
 
               <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-gray-600">
-                  Add variants for your product. Each variant can have different price, weight, and stock quantity.
+                  Add variants for your product. Each variant can have different
+                  price, weight, and stock quantity.
                 </p>
                 <Button
                   size="sm"
@@ -692,14 +722,15 @@ export default function ProductCreateAllInOne() {
                             type="number"
                             step="0.01"
                             min="0"
+                            inputMode="decimal"
                             value={variant.price}
-                            onChange={(e) =>
-                              updateVariant(variant.id, {
-                                price: Number(e.target.value),
-                              })
-                            }
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="0.00"
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (Number(value) < 0) return;
+                              updateVariant(variant.id, { price: value });
+                            }}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                            placeholder="VD: 12500.50"
                             required
                           />
                         </div>
@@ -710,33 +741,53 @@ export default function ProductCreateAllInOne() {
                           </label>
                           <input
                             type="number"
-                            step="0.1"
+                            step="1"
                             min="0"
                             value={variant.weight}
-                            onChange={(e) =>
-                              updateVariant(variant.id, {
-                                weight: Number(e.target.value),
-                              })
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const numValue = Number(value);
+                              if (numValue < 0) {
+                                updateVariant(variant.id, { weight: "0" });
+                              } else {
+                                updateVariant(variant.id, {
+                                  weight: value.replace(/^0+/, "") || "0",
+                                });
+                              }
+                            }}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="0.0"
+                            placeholder="0"
                           />
                         </div>
 
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Stock Quantity <span className="text-red-500">*</span>
+                            Stock Quantity{" "}
+                            <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="number"
                             step="1"
                             min="0"
+                            inputMode="numeric"
                             value={variant.stockQuantity}
-                            onChange={(e) =>
-                              updateVariant(variant.id, {
-                                stockQuantity: Number(e.target.value),
-                              })
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              ); // Only allow digits
+                              const numValue = Number(value);
+                              if (numValue < 0) {
+                                updateVariant(variant.id, {
+                                  stockQuantity: "0",
+                                });
+                              } else {
+                                updateVariant(variant.id, {
+                                  stockQuantity:
+                                    value.replace(/^0+/, "") || "0",
+                                });
+                              }
+                            }}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="0"
                             required
@@ -752,14 +803,17 @@ export default function ProductCreateAllInOne() {
                           </label>
                           <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                             {productImages.map((img) => {
-                              const isSelected = variant.associatedImageUrls.includes(
-                                img.imageUrl
-                              );
+                              const isSelected =
+                                variant.associatedImageUrls.includes(
+                                  img.imageUrl
+                                );
                               return (
                                 <button
                                   key={img.id}
                                   type="button"
-                                  onClick={() => toggleVariantImage(variant.id, img.imageUrl)}
+                                  onClick={() =>
+                                    toggleVariantImage(variant.id, img.imageUrl)
+                                  }
                                   className={`relative rounded-lg overflow-hidden border-2 transition ${
                                     isSelected
                                       ? "border-indigo-600 ring-2 ring-indigo-400"
@@ -794,7 +848,8 @@ export default function ProductCreateAllInOne() {
                           </div>
                           {variant.associatedImageUrls.length > 0 && (
                             <p className="text-xs text-gray-500 mt-2">
-                              {variant.associatedImageUrls.length} image(s) selected
+                              {variant.associatedImageUrls.length} image(s)
+                              selected
                             </p>
                           )}
                         </div>
@@ -844,7 +899,7 @@ export default function ProductCreateAllInOne() {
                   <span className="text-sm font-medium text-gray-700">
                     Category ID:
                   </span>
-                  <p className="text-gray-900">{categoryId}</p>
+                  <p className="text-gray-900">{categoryName}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
@@ -862,9 +917,7 @@ export default function ProductCreateAllInOne() {
                   <span className="text-sm font-medium text-gray-700">
                     Variants:
                   </span>
-                  <p className="text-gray-900">
-                    {variants.length} variants
-                  </p>
+                  <p className="text-gray-900">{variants.length} variants</p>
                 </div>
               </div>
 
@@ -873,9 +926,13 @@ export default function ProductCreateAllInOne() {
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="bg-gray-100 border-b">
-                      <th className="border px-3 py-2 text-left">Variant Name</th>
+                      <th className="border px-3 py-2 text-left">
+                        Variant Name
+                      </th>
                       <th className="border px-3 py-2 text-right">Price</th>
-                      <th className="border px-3 py-2 text-right">Weight (kg)</th>
+                      <th className="border px-3 py-2 text-right">
+                        Weight (kg)
+                      </th>
                       <th className="border px-3 py-2 text-right">Stock</th>
                       <th className="border px-3 py-2 text-center">Images</th>
                     </tr>
@@ -886,12 +943,14 @@ export default function ProductCreateAllInOne() {
                         key={variant.id}
                         className="border-b hover:bg-gray-50"
                       >
-                        <td className="border px-3 py-2">{variant.variantName}</td>
-                        <td className="border px-3 py-2 text-right">
-                          ${variant.price.toFixed(2)}
+                        <td className="border px-3 py-2">
+                          {variant.variantName}
                         </td>
                         <td className="border px-3 py-2 text-right">
-                          {variant.weight.toFixed(1)}
+                          {(Number(variant.price) || 0).toFixed(2)} VND
+                        </td>
+                        <td className="border px-3 py-2 text-right">
+                          {(Number(variant.weight) || 0).toFixed(1)}
                         </td>
                         <td className="border px-3 py-2 text-right">
                           {variant.stockQuantity}
@@ -927,7 +986,6 @@ export default function ProductCreateAllInOne() {
           )}
         </form>
       </div>
-
     </>
   );
 }

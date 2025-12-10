@@ -482,7 +482,7 @@ export default function ProductDetailModal({
                       <thead className="bg-gray-50">
                         <tr className="text-sm text-gray-600">
                           <th className="py-3 px-4 border-b">ID</th>
-                          <th className="py-3 px-4 border-b">Image ID</th>
+
                           <th className="py-3 px-4 border-b">Variant Name</th>
                           <th className="py-3 px-4 border-b">Weight (g)</th>
                           <th className="py-3 px-4 border-b">Price</th>
@@ -496,9 +496,7 @@ export default function ProductDetailModal({
                         {product.productVariant.map((variant) => (
                           <tr key={variant.id} className="border-b">
                             <td className="py-3 px-4 text-sm">{variant.id}</td>
-                            <td className="py-3 px-4 text-sm text-gray-600">
-                              {variant.productImageId || "N/A"}
-                            </td>
+
                             <td className="py-3 px-4 text-sm font-medium">
                               {variant.variantName}
                             </td>
