@@ -44,6 +44,8 @@ export default function ProductCreateAllInOne() {
   const [shortDescription, setShortDescription] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [featured, setFeatured] = useState<boolean>(false);
+  const [animal, setAnimal] = useState<string>("");
+  const [brand, setBrand] = useState<string>("");
 
   const [catLoading, setCatLoading] = useState<boolean>(false);
   const catAbortRef = useRef<AbortController | null>(null);
@@ -73,6 +75,8 @@ export default function ProductCreateAllInOne() {
     setName("");
     setShortDescription("");
     setDescription("");
+    setAnimal("");
+    setBrand("");
     setFeatured(false);
     setProductImages([]);
     setVariants([]);
@@ -315,6 +319,8 @@ export default function ProductCreateAllInOne() {
         categoryId: Number(categoryId),
         shortDescription: shortDescription.trim(),
         description: description.trim(),
+        animal: animal.trim(),
+        brand: brand.trim(),
         featured,
         images: productImages.map((img, index) => ({
           imageUrl: img.imageUrl,
@@ -552,6 +558,33 @@ export default function ProductCreateAllInOne() {
                   className="w-full border rounded px-3 py-2 h-32"
                   placeholder="Detailed description..."
                 />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Animal
+                  </label>
+                  <input
+                    value={animal}
+                    onChange={(e) => setAnimal(e.target.value)}
+                    type="text"
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Dog / Cat / Bird..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Brand
+                  </label>
+                  <input
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    type="text"
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Royal Canin, Whiskas..."
+                  />
+                </div>
               </div>
 
               <div className="mt-4 flex items-center gap-2">
@@ -907,6 +940,20 @@ export default function ProductCreateAllInOne() {
                   </span>
                   <p className="text-gray-900">{featured ? "Yes" : "No"}</p>
                 </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Animal:
+                  </span>
+                  <p className="text-gray-900">{animal || "-"}</p>
+                </div>
+
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Brand:
+                  </span>
+                  <p className="text-gray-900">{brand || "-"}</p>
+                </div>
+
                 <div>
                   <span className="text-sm font-medium text-gray-700">
                     Images:

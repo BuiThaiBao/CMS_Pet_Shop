@@ -11,6 +11,8 @@ export default function ProductAdd() {
   const [name, setName] = useState<string>("");
   const [shortDescription, setShortDescription] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [animal, setAnimal] = useState<string>("");
+  const [brand, setBrand] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +27,8 @@ export default function ProductAdd() {
     setName("");
     setShortDescription("");
     setDescription("");
+    setAnimal("");
+    setBrand("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -38,6 +42,8 @@ export default function ProductAdd() {
         name,
         shortDescription,
         description,
+        animal,
+        brand,
         // No price field per request
       };
       const res = await productApi.create(payload);
@@ -173,6 +179,26 @@ export default function ProductAdd() {
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
               placeholder="Description"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm text-gray-600 mb-1">Animal</label>
+            <textarea
+              value={description}
+              onChange={(e) => setAnimal(e.target.value)}
+              className="w-full border rounded px-3 py-2 h-36"
+              placeholder="Animal"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm text-gray-600 mb-1">Brand</label>
+            <textarea
+              value={description}
+              onChange={(e) => setBrand(e.target.value)}
+              className="w-full border rounded px-3 py-2 h-36"
+              placeholder="Branch"
             />
           </div>
 

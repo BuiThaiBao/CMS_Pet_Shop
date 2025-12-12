@@ -19,6 +19,8 @@ export type CreateProductAllInOnePayload = {
   categoryId: number;
   shortDescription: string;
   description: string;
+  animal: string;
+  brand: string;
   featured: boolean;
   images: Array<{
     imageUrl: string;

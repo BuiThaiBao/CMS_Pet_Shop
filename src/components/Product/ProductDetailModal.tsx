@@ -47,6 +47,8 @@ type ProductDetail = {
   name: string;
   shortDescription?: string;
   description?: string;
+  animal?: string;
+  brand?: string;
   stockQuantity?: number;
   soldQuantity?: number;
   isDeleted?: string;
@@ -274,6 +276,8 @@ export default function ProductDetailModal({
                   {product.categoryName && (
                     <span>Category: {product.categoryName}</span>
                   )}
+                  {product.animal && <span>Animal: {product.animal}</span>}
+                  {product.brand && <span>Brand: {product.brand}</span>}
                   {product.isFeatured === "1" && (
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
                       Featured
