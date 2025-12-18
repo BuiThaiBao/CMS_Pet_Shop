@@ -28,6 +28,7 @@ import ProductCreateAllInOne from "./pages/Product/ProductCreateAllInOne";
 import Service from "./pages/Service/Service";
 import ServiceAdd from "./pages/Service/ServiceAdd";
 import ServiceEdit from "./pages/Service/ServiceEdit";
+import OrderPage from "./pages/Orders/Order";
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/category" element={<Category />} />
             <Route path="/category/add" element={<CategoryAdd />} />
             <Route path="/category/edit/:id" element={<CategoryEdit />} />
+            <Route path="/orders" element={<OrderPage />} />
             <Route path="/product" element={<Product />} />
             <Route path="/product/add" element={<ProductAdd />} />
             <Route
@@ -63,6 +65,7 @@ export default function App() {
             <Route path="/blank" element={<Blank />} />
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
+
             {/* Tables
             <Route path="/basic-tables" element={<BasicTables />} />
             {/* Ui Elements */}

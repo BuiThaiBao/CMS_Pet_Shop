@@ -7,4 +7,5 @@ export { default as userApi } from "./userApi";
 export { default as variantApi } from "./variantApi";
 export { default as imageApi } from "./imageApi";
 export { default as serviceApi } from "./serviceApi";
+export { default as orderApi } from "./orderApi";
 export * from "./tokenStorage";

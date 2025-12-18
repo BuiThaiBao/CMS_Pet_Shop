@@ -62,6 +62,16 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    icon: <GridIcon />,
+    name: "Order",
+    subItems: [
+      { name: "Order List", path: "/orders" },
+      // nếu sau này có
+      // { name: "Order Detail", path: "/order/:id" },
+    ],
+  },
+
+  {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/profile",
