@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface Option {
   value: string;
   label: string;
+  disabled?: boolean; // ✅ add for future (bulk transition disable)
 }
 
 interface SelectProps {
   options: Option[];
+  value?: string;
   placeholder?: string;
   onChange: (value: string) => void;
   className?: string;
@@ -20,10 +22,11 @@ interface SelectProps {
   required?: boolean;
 }
 
-const ITEM_HEIGHT = 40; // px, for dropdown max-height calculation
+const ITEM_HEIGHT = 40;
 
 const Select: React.FC<SelectProps> = ({
   options,
+  value,
   placeholder = "Select an option",
   onChange,
   className = "",
@@ -45,8 +48,16 @@ const Select: React.FC<SelectProps> = ({
   const listRef = useRef<HTMLUListElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
+  // ✅ IMPORTANT: if options already contain value="" (like "All Status"),
+  // we should NOT inject a disabled placeholder option in <select> mode.
+  const hasEmptyOption = options.some((o) => o.value === "");
+
   const selectedLabel =
     options.find((o) => o.value === selectedValue)?.label || "";
+
+  useEffect(() => {
+    if (value !== undefined) setSelectedValue(value);
+  }, [value]);
 
   useEffect(() => {
     if (!open) return;
@@ -87,6 +98,7 @@ const Select: React.FC<SelectProps> = ({
   const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
     if (!dropdown) return;
     const key = e.key;
+
     if (key === "ArrowDown") {
       e.preventDefault();
       if (!open) return setOpen(true);
@@ -100,7 +112,7 @@ const Select: React.FC<SelectProps> = ({
     } else if (key === "Enter") {
       e.preventDefault();
       const opt = filteredOptions[activeIndex];
-      if (opt) commitSelection(opt.value);
+      if (opt && !opt.disabled) commitSelection(opt.value);
     } else if (key === "Escape") {
       setOpen(false);
     } else if (key.length === 1 && /[\w\d\s]/.test(key)) {
@@ -116,15 +128,16 @@ const Select: React.FC<SelectProps> = ({
   useEffect(() => {
     if (!open || !listRef.current) return;
     const el = listRef.current.children[activeIndex] as HTMLElement | undefined;
-    if (el) {
-      const list = listRef.current;
-      const top = el.offsetTop;
-      const bottom = top + el.offsetHeight;
-      const viewTop = list.scrollTop;
-      const viewBottom = viewTop + list.clientHeight;
-      if (top < viewTop) list.scrollTop = top;
-      else if (bottom > viewBottom) list.scrollTop = bottom - list.clientHeight;
-    }
+    if (!el) return;
+
+    const list = listRef.current;
+    const top = el.offsetTop;
+    const bottom = top + el.offsetHeight;
+    const viewTop = list.scrollTop;
+    const viewBottom = viewTop + list.clientHeight;
+
+    if (top < viewTop) list.scrollTop = top;
+    else if (bottom > viewBottom) list.scrollTop = bottom - list.clientHeight;
   }, [activeIndex, open]);
 
   const heightClass =
@@ -134,8 +147,10 @@ const Select: React.FC<SelectProps> = ({
       ? "h-9"
       : "h-11";
 
+  // ================= DROPDOWN MODE =================
   if (dropdown) {
     const maxHeight = rows && rows > 1 ? rows * ITEM_HEIGHT : undefined;
+
     return (
       <div ref={containerRef} className={`relative ${className}`}>
         {searchable && searchInTrigger ? (
@@ -164,7 +179,7 @@ const Select: React.FC<SelectProps> = ({
                 } else if (key === "Enter") {
                   e.preventDefault();
                   const opt = filteredOptions[activeIndex];
-                  if (opt) commitSelection(opt.value);
+                  if (opt && !opt.disabled) commitSelection(opt.value);
                 } else if (key === "Escape") {
                   setOpen(false);
                 }
@@ -219,6 +234,7 @@ const Select: React.FC<SelectProps> = ({
             </span>
           </button>
         )}
+
         {open && (
           <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 shadow-lg">
             {searchable && showSearchInput && (
@@ -232,6 +248,7 @@ const Select: React.FC<SelectProps> = ({
                 />
               </div>
             )}
+
             <ul
               ref={listRef}
               role="listbox"
@@ -243,19 +260,24 @@ const Select: React.FC<SelectProps> = ({
                   No results
                 </li>
               )}
+
               {filteredOptions.map((option, idx) => {
                 const active = idx === activeIndex;
                 const selected = option.value === selectedValue;
+                const disabled = !!option.disabled;
+
                 return (
                   <li
                     key={option.value}
                     role="option"
                     aria-selected={selected}
                     onMouseEnter={() => setActiveIndex(idx)}
-                    onClick={() => commitSelection(option.value)}
-                    className={`px-4 py-2 cursor-pointer text-sm hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                      active ? "bg-gray-100 dark:bg-gray-800" : ""
-                    }`}
+                    onClick={() => !disabled && commitSelection(option.value)}
+                    className={`px-4 py-2 text-sm ${
+                      disabled
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                    } ${active ? "bg-gray-100 dark:bg-gray-800" : ""}`}
                   >
                     {option.label}
                   </li>
@@ -268,10 +290,12 @@ const Select: React.FC<SelectProps> = ({
     );
   }
 
+  // ================= NATIVE SELECT MODE =================
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedValue(value);
-    onChange(value);
+    const v = e.target.value;
+    setSelectedValue(v);
+    onChange(v);
   };
 
   return (
@@ -286,17 +310,22 @@ const Select: React.FC<SelectProps> = ({
       size={rows && rows > 1 ? rows : undefined}
       required={required}
     >
-      <option
-        value=""
-        disabled
-        className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-      >
-        {placeholder}
-      </option>
+      {/* ✅ Only add disabled placeholder option when options DON'T already contain empty value */}
+      {!hasEmptyOption && (
+        <option
+          value=""
+          disabled
+          className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+        >
+          {placeholder}
+        </option>
+      )}
+
       {options.map((option) => (
         <option
           key={option.value}
           value={option.value}
+          disabled={!!option.disabled}
           className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
         >
           {option.label}

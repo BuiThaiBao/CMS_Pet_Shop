@@ -19,8 +19,8 @@ export const orderApi = {
     });
   },
 
-  updateStatus(id: number, status: string) {
-    return http.patch(`/orders/admin/orders/${id}/status`, { status });
+  updateStatus(data: any) {
+    return http.put(`/orders/update-status`, data);
   },
 };
 
