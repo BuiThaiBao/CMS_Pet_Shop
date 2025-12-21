@@ -67,6 +67,11 @@ export const productApi = {
   createAll(body: CreateProductAllInOnePayload) {
     return http.post("/products/create-all", body);
   },
+  checkProductExists(name: string) {
+    return http.post("/products/check-exists", {
+      name: name.trim(),
+    });
+  },
 };
 
 export default productApi;

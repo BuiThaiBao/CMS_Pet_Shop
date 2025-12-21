@@ -41,6 +41,10 @@ export default function ProductCreateAllInOne() {
     return option ? option.label : "";
   })();
   const [name, setName] = useState<string>("");
+  const [nameChecking, setNameChecking] = useState(false);
+  const [nameExists, setNameExists] = useState<boolean | null>(null);
+  const nameCheckTimeout = useRef<number | null>(null);
+
   const [shortDescription, setShortDescription] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [featured, setFeatured] = useState<boolean>(false);
@@ -85,6 +89,33 @@ export default function ProductCreateAllInOne() {
     setError(null);
     setCurrentStep("info");
   };
+
+  // CHECK PRODUCT NAME EXISTENCE
+  const checkProductName = useCallback((value: string) => {
+    if (!value.trim()) {
+      setNameExists(null);
+      return;
+    }
+
+    // debounce 500ms
+    if (nameCheckTimeout.current) {
+      clearTimeout(nameCheckTimeout.current);
+    }
+
+    nameCheckTimeout.current = setTimeout(async () => {
+      try {
+        setNameChecking(true);
+        const res = await productApi.checkProductExists(value.trim());
+        const exists = res?.data?.result === true;
+        setNameExists(exists);
+      } catch (err) {
+        console.error("Check name error", err);
+        setNameExists(null);
+      } finally {
+        setNameChecking(false);
+      }
+    }, 500);
+  }, []);
 
   // ==================== Image Upload Logic ====================
 
@@ -284,6 +315,10 @@ export default function ProductCreateAllInOne() {
         throw new Error("Product name is required");
       }
 
+      if (nameExists === true) {
+        throw new Error("Product name already exists");
+      }
+
       if (!categoryId) {
         throw new Error("Category is required");
       }
@@ -427,8 +462,30 @@ export default function ProductCreateAllInOne() {
       name.trim() &&
       categoryId &&
       shortDescription.trim() &&
-      productImages.length > 0
+      productImages.length > 0 &&
+      nameExists === false && // ❌ trùng → chặn
+      !nameChecking
     );
+  };
+  const goToStep = (step: "info" | "variants" | "review") => {
+    // Luôn cho quay lại Info
+    if (step === "info") {
+      setCurrentStep("info");
+      return;
+    }
+
+    // Info -> Variants
+    if (step === "variants") {
+      if (!canProceedToVariants()) return;
+      setCurrentStep("variants");
+      return;
+    }
+
+    // Variants -> Review
+    if (step === "review") {
+      if (!canProceedToReview()) return;
+      setCurrentStep("review");
+    }
   };
 
   const canProceedToReview = (): boolean => {
@@ -472,18 +529,31 @@ export default function ProductCreateAllInOne() {
             <div key={step} className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setCurrentStep(step as any)}
-                className={`w-10 h-10 rounded-full font-semibold transition ${
-                  currentStep === step
-                    ? "bg-indigo-600 text-white"
-                    : ["info", "variants"].includes(step) &&
-                      ["info", "variants", "review"].indexOf(currentStep) > idx
-                    ? "bg-green-500 text-white cursor-pointer"
-                    : "bg-gray-300 text-gray-600"
-                }`}
+                onClick={() => goToStep(step as any)}
+                disabled={
+                  (step === "variants" && !canProceedToVariants()) ||
+                  (step === "review" && !canProceedToReview())
+                }
+                className={`w-10 h-10 rounded-full font-semibold transition
+    ${
+      currentStep === step
+        ? "bg-indigo-600 text-white"
+        : ["info", "variants"].includes(step) &&
+          ["info", "variants", "review"].indexOf(currentStep) > idx
+        ? "bg-green-500 text-white"
+        : "bg-gray-300 text-gray-600"
+    }
+    ${
+      (step === "variants" && !canProceedToVariants()) ||
+      (step === "review" && !canProceedToReview())
+        ? "cursor-not-allowed opacity-50"
+        : "cursor-pointer"
+    }
+  `}
               >
                 {idx + 1}
               </button>
+
               <span className="text-sm font-medium capitalize">{step}</span>
               {idx < 2 && <span className="text-gray-400">→</span>}
             </div>
@@ -525,13 +595,43 @@ export default function ProductCreateAllInOne() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Product Name *
                   </label>
+
                   <input
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setName(value);
+                      checkProductName(value);
+                    }}
                     type="text"
-                    className="w-full border rounded px-3 py-2"
+                    className={`w-full border rounded px-3 py-2 ${
+                      nameExists === true
+                        ? "border-red-500"
+                        : nameExists === false
+                        ? "border-green-500"
+                        : ""
+                    }`}
                     placeholder="Enter product name"
                   />
+
+                  {/* STATUS MESSAGE */}
+                  <div className="mt-1 text-sm">
+                    {nameChecking && (
+                      <span className="text-gray-500">Checking name...</span>
+                    )}
+
+                    {!nameChecking && nameExists === true && (
+                      <span className="text-red-600">
+                        ❌ Product name already exists
+                      </span>
+                    )}
+
+                    {!nameChecking && nameExists === false && name.trim() && (
+                      <span className="text-green-600">
+                        ✔ Product name is available
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
