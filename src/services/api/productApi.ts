@@ -49,11 +49,11 @@ export const productApi = {
     },
     options?: { signal?: AbortSignal }
   ) {
-    return http.get("/products", { params, signal: options?.signal });
+    return http.get("/products/admin", { params, signal: options?.signal });
   },
 
   getById(id: number | string) {
-    return http.get(`/products/${id}`);
+    return http.get(`/products/admin/${id}`);
   },
 
   create(body: ProductPayload) {
