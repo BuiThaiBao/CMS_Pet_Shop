@@ -29,6 +29,9 @@ import Service from "./pages/Service/Service";
 import ServiceAdd from "./pages/Service/ServiceAdd";
 import ServiceEdit from "./pages/Service/ServiceEdit";
 import OrderPage from "./pages/Orders/Order";
+import PetList from "./pages/Pet/PetList";
+import PetAdd from "./pages/Pet/PetAdd";
+import PetEdit from "./pages/Pet/PetEdit";
 
 export default function App() {
   return (
@@ -62,6 +65,9 @@ export default function App() {
             <Route path="/service" element={<Service />} />
             <Route path="/service/add" element={<ServiceAdd />} />
             <Route path="/service/edit/:id" element={<ServiceEdit />} />
+            <Route path="/pet/list" element={<PetList />} />
+            <Route path="/pet/add" element={<PetAdd />} />
+            <Route path="/pet/edit/:id" element={<PetEdit />} />
             <Route path="/blank" element={<Blank />} />
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
