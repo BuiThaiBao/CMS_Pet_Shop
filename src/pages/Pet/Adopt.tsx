@@ -16,6 +16,11 @@ export default function Adopt() {
   const [totalPages, setTotalPages] = useState(0);
   const [pets, setPets] = useState<any[]>([]);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [status, debouncedCode, petId, size]);
+
   useEffect(() => {
     const loadPets = async () => {
       try {
@@ -124,12 +129,20 @@ export default function Adopt() {
             </thead>
             <tbody>
               {list.length === 0 && (
-                <tr><td colSpan={5} className="adopt-empty">Không có dữ liệu</td></tr>
+                <tr><td colSpan={6} className="adopt-empty">Không có dữ liệu</td></tr>
               )}
               {list.map((r: any) => (
                 <tr key={r.id} className="adopt-card-row">
                   <td>{r.code}</td>
-                  <td>{r.pet?.name || r.petName || r.petId || '—'}</td>
+                  <td>
+                    {(() => {
+                      if (r.pet?.name) return r.pet.name;
+                      if (r.petName) return r.petName;
+                      const id = r.petId ?? r.pet?.id;
+                      const found = pets.find((p) => String(p.id) === String(id));
+                      return found?.name || (id ? `#${id}` : '—');
+                    })()}
+                  </td>
                   <td>{r.createdDate ? new Date(r.createdDate).toLocaleDateString('vi-VN') : ''}</td>
                   <td>{r.status}</td>
                   <td>{r.note}</td>
@@ -140,6 +153,27 @@ export default function Adopt() {
           </table>
         )}
       </div>
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="adopt-panel adopt-pagination">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>Trang {page} / {totalPages} — Tổng {totalPages * size} trang</div>
+            <div className="d-flex gap-2 align-items-center">
+              <button className="btn btn-sm btn-outline-primary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pn) => (
+                <button key={pn} className={`btn btn-sm ${pn === page ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setPage(pn)}>{pn}</button>
+              ))}
+              <button className="btn btn-sm btn-outline-primary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</button>
+              <select className="form-select form-select-sm ms-2" style={{ width: 80 }} value={size} onChange={(e) => { setSize(Number(e.target.value)); setPage(1); }}>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

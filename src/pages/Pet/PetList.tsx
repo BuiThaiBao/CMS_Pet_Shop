@@ -5,6 +5,7 @@ import petApi from "../../services/api/petApi";
 import Select from "../../components/form/Select";
 import Switch from "../../components/form/switch/Switch";
 import PetDetailModal from "../../components/Pet/PetDetailModal";
+import Alert from "../../components/ui/alert/Alert";
 
 
 export default function PetList() {
@@ -21,9 +22,15 @@ export default function PetList() {
   const [animal, setAnimal] = useState("");
   const [size, setSize] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
+  const [includeDeleted, setIncludeDeleted] = useState<boolean>(false);
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [toast, setToast] = useState<{
+    variant: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
+  } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   // Animal options lấy từ API
@@ -80,7 +87,7 @@ export default function PetList() {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNumber, pageSize, animal, size, ageGroup, status]);
+  }, [pageNumber, pageSize, animal, size, ageGroup, status, includeDeleted]);
 
   useEffect(() => {
     // Reset to page 1 when filters change
@@ -110,7 +117,8 @@ export default function PetList() {
       if (size) params.size = size; // Filter size (Small/Medium/Big)
       if (ageGroup) params.ageGroup = ageGroup;
       if (status) params.status = status;
-      params.isDeleted = "";
+      // If user wants to include deleted pets, send explicit isDeleted=1
+      if (includeDeleted) params.isDeleted = "1";
       
       const query = new URLSearchParams(params).toString();
       console.log("Calling API with query:", query);
@@ -119,14 +127,26 @@ export default function PetList() {
       const data = res.data?.result ?? res.data;
       
       if (data) {
+        // helper to normalize isDeleted to "0" or "1"
+        const to01 = (v: any) => {
+          if (v === null || v === undefined) return "0";
+          const s = String(v).toLowerCase();
+          if (s === "0" || s === "false" || s === "null" || s === "undefined") return "0";
+          return "1";
+        };
+
         // Nếu data là mảng trực tiếp (không có pagination)
         if (Array.isArray(data)) {
-          setPets(data);
+          const normalized = data.map((p: any) => ({ ...p, isDeleted: to01(p.isDeleted ?? p.is_deleted) }));
+          console.debug("Loaded pets (normalized isDeleted):", normalized.map((p: any) => ({ id: p.id, isDeleted: p.isDeleted })));
+          setPets(normalized);
           setTotalPages(1);
           setTotalElements(data.length);
         } else {
           // Nếu có pagination structure
-          setPets(data.content || []);
+          const normalized = (data.content || []).map((p: any) => ({ ...p, isDeleted: to01(p.isDeleted ?? p.is_deleted) }));
+          console.debug("Loaded pets page (normalized isDeleted):", normalized.map((p: any) => ({ id: p.id, isDeleted: p.isDeleted })));
+          setPets(normalized);
           setTotalPages(data.totalPages ?? 0);
           setTotalElements(data.totalElements ?? 0);
           const serverPageRaw =
@@ -160,7 +180,7 @@ export default function PetList() {
     }
   };
 
-  const handleToggleDeleted = async (id: number | string | undefined) => {
+  const handleToggleDeleted = async (id: number | string | undefined, checked?: boolean) => {
     if (!id) {
       console.error("Invalid pet ID: id is missing");
       return;
@@ -184,7 +204,10 @@ export default function PetList() {
     }
 
     const prevPets = [...pets];
-    const newIsDeleted = current.isDeleted === "0" ? "1" : "0";
+    // Determine new isDeleted based on explicit checked value if provided.
+    // Conventional mapping: isDeleted === "0" means Active, "1" means Deleted.
+    // So when switch is checked (true) we set isDeleted = "0" (Active).
+    const newIsDeleted = typeof checked === 'boolean' ? (checked ? "0" : "1") : (current.isDeleted === "0" ? "1" : "0");
 
     const nextPets = pets.map((p) => {
       const pId = typeof p.id === 'string' ? parseInt(p.id, 10) : Number(p.id);
@@ -197,18 +220,40 @@ export default function PetList() {
     setUpdatingIds(updating);
 
     try {
-      console.log("Calling API deletePet with ID:", numericId);
-      await petApi.deletePet(numericId);
-      console.log("API call successful");
+      console.log("Updating isDeleted for pet ID:", numericId, "->", newIsDeleted);
+      // Some backend routes use a dedicated delete endpoint for marking deleted.
+      // Use the delete endpoint when setting isDeleted = "1" for compatibility,
+      // and use the generic update endpoint when setting back to "0".
+      if (newIsDeleted === "1") {
+        await petApi.deletePet(numericId);
+      } else {
+        // call restore endpoint when re-activating so backend can handle restore logic
+        await petApi.restorePet(numericId);
+      }
+      console.log("Update successful (server persisted). UI updated optimistically.");
     } catch (error) {
       console.error("Failed to toggle pet deleted state", error);
       setPets(prevPets);
+      // Extract server message if available (ApiResponse.message)
+      const serverMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.result?.message ||
+        error?.message ||
+        "Không thể cập nhật trạng thái. Vui lòng thử lại.";
+      setToast({ variant: "error", title: "Lỗi", message: serverMessage });
     } finally {
       const after = new Set(updatingIds);
       after.delete(numericId);
       setUpdatingIds(after);
     }
   };
+
+  // Auto-clear toast after 3 seconds
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const handleViewDetail = (id: number | string | undefined) => {
     if (!id) {
@@ -233,6 +278,11 @@ export default function PetList() {
     <>
       <PageMeta title="Pet List | Pet Shop CMS" description="List of all pets" />
       <div className="p-4">
+        {toast && (
+          <div className="fixed right-4 top-24 z-[9999] w-96">
+            <Alert variant={toast.variant === "error" ? "error" : "success"} title={toast.title} message={toast.message} />
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">Pet List</h1>
@@ -260,6 +310,7 @@ export default function PetList() {
                     <th className="py-3 px-4">Gender</th>
                     <th className="py-3 px-4">Size</th>
                     <th className="py-3 px-4">Age Group</th>
+                    <th className="py-3 px-4">Health Status</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Deleted</th>
                     <th className="py-3 px-4">Created At</th>
@@ -292,17 +343,19 @@ export default function PetList() {
                         <td className="py-4 px-4">{pet.size}</td>
                         <td className="py-4 px-4">{pet.ageGroup}</td>
                         <td className="py-4 px-4">{pet.healthStatus || "Good"}</td>
+                        <td className="py-4 px-4">{pet.status}</td> 
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <Switch
                               key={`pet-del-${petId}-${pet.isDeleted}`}
                               label=""
+                              // Conventional mapping: isDeleted === "0" => Active
                               color={pet.isDeleted === "0" ? "green" : "red"}
                               disabled={!isNaN(petIdNum) && updatingIds.has(petIdNum)}
                               defaultChecked={pet.isDeleted === "0"}
                               onChange={(checked) => {
                                 console.log("Switch toggled for pet ID:", petId, "checked:", checked);
-                                handleToggleDeleted(petId);
+                                handleToggleDeleted(petId, checked);
                               }}
                             />
                             <span

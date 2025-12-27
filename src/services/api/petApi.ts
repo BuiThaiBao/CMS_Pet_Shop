@@ -56,6 +56,9 @@ const petApi = {
   deletePet: (id: number) => {
     return http.put(`/pets/delete/${id}`);
   },
+  restorePet: (id: number) => {
+    return http.put(`/pets/restore/${id}`);
+  },
   getAnimalsForCustomer: () => {
     return http.get("/pets/animalsCustomer");
   },

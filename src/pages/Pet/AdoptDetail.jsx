@@ -51,7 +51,15 @@ export default function AdoptDetail() {
 
   const updateStatus = async (newStatus) => {
     if (!adopt?.adoptId) return;
-    if (!window.confirm(`Bạn có chắc muốn chuyển trạng thái thành ${newStatus}?`)) return;
+    if(newStatus === "APPROVED") {
+      if (!window.confirm(`Bạn có chắc muốn duyệt đơn nhận nuôi này không?`)) return;
+    }
+    else if (newStatus === "REJECTED") {
+      if (!window.confirm(`Bạn có chắc muốn từ chối đơn nhận nuôi này không?`)) return;
+    }
+    else if( newStatus === "COMPLETED") {
+      if (!window.confirm(`Bạn có chắc muốn chấp nhận người nhận nuôi này không?`)) return;
+    }
 
     setUpdating(true);
     try {
@@ -105,7 +113,6 @@ export default function AdoptDetail() {
   const acceptAdopter = async () => {
     // when accepting adopter, set status to COMPLETED
     if (!adopt || !adopt.adoptId) return;
-    if (!window.confirm('Bạn có chắc muốn chấp nhận người nhận nuôi và hoàn tất đơn?')) return;
     await updateStatus('COMPLETED');
   };
 

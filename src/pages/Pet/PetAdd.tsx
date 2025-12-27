@@ -70,6 +70,19 @@ export default function PetAdd() {
     { value: "Female", label: "Female" },
   ];
 
+  const animalOptions = [
+    { value: "DOG", label: "Dog" },
+    { value: "CAT", label: "Cat" },
+    { value: "BIRD", label: "Bird" },
+    { value: "RABBIT", label: "Rabbit" },
+    { value: "OTHER", label: "Other" },
+  ];
+
+  const healthStatusOptions = [
+    { value: "BAD", label: "Bad" },
+    { value: "GOOD", label: "Good" },
+  ];
+
   // ==================== Image Upload Logic ====================
 
   const handleImageUpload = useCallback(
@@ -220,6 +233,18 @@ export default function PetAdd() {
     }
   };
 
+  // Form validation: only enable Create button when all required fields filled
+  const isFormValid = Boolean(
+    name && name.trim() &&
+      animal &&
+      breed && breed.trim() &&
+      age !== "" &&
+      ageGroup &&
+      size &&
+      gender &&
+      petImages.length > 0
+  );
+
   return (
     <>
       <PageMeta
@@ -286,12 +311,12 @@ export default function PetAdd() {
                     <label className="mb-2.5 block text-black dark:text-white">
                       Animal Type <span className="text-meta-1">*</span>
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Dog / Cat / Bird..."
+                    <Select
+                      options={animalOptions}
                       value={animal}
-                      onChange={(e) => setAnimal(e.target.value)}
-                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                      onChange={(val) => setAnimal(val)}
+                      placeholder="Select animal"
+                      required
                     />
                   </div>
                 </div>
@@ -378,17 +403,16 @@ export default function PetAdd() {
 
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
-                    <label className="mb-2.5 block text-black dark:text-white">
-                      Health Status
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Good, etc."
-                      value={healthStatus}
-                      onChange={(e) => setHealthStatus(e.target.value)}
-                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-                    />
-                  </div>
+                      <label className="mb-2.5 block text-black dark:text-white">
+                        Health Status
+                      </label>
+                      <Select
+                        options={healthStatusOptions}
+                        value={healthStatus}
+                        onChange={(val) => setHealthStatus(val)}
+                        placeholder="Select health status"
+                      />
+                    </div>
                 </div>
 
                 <div className="mb-6 flex flex-col gap-6 xl:flex-row">
@@ -493,7 +517,7 @@ export default function PetAdd() {
                   <Button
                     variant="primary"
                     onClick={handleSubmit}
-                    disabled={loading || uploadingImages}
+                    disabled={!isFormValid || loading || uploadingImages}
                   >
                     {loading ? "Creating..." : "Create Pet"}
                   </Button>
