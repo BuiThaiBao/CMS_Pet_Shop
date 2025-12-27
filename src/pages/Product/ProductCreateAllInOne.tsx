@@ -461,7 +461,6 @@ export default function ProductCreateAllInOne() {
     return !!(
       name.trim() &&
       categoryId &&
-      shortDescription.trim() &&
       productImages.length > 0 &&
       nameExists === false && // ❌ trùng → chặn
       !nameChecking
@@ -495,7 +494,7 @@ export default function ProductCreateAllInOne() {
         (v) =>
           v.variantName.trim() &&
           Number(v.price) > 0 &&
-          Number(v.stockQuantity) >= 0
+          Number(v.stockQuantity) > 0
       )
     );
   };
@@ -637,7 +636,7 @@ export default function ProductCreateAllInOne() {
 
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Short Description *
+                  Short Description
                 </label>
                 <input
                   value={shortDescription}
@@ -853,7 +852,7 @@ export default function ProductCreateAllInOne() {
                           </label>
                           <input
                             type="number"
-                            step="0.01"
+                            step="1000"
                             min="0"
                             inputMode="decimal"
                             value={variant.price}
@@ -1094,7 +1093,7 @@ export default function ProductCreateAllInOne() {
                           {variant.variantName}
                         </td>
                         <td className="border px-3 py-2 text-right">
-                          {(Number(variant.price) || 0).toFixed(2)} VND
+                          {Number(variant.price).toLocaleString("vi-VN")} VND
                         </td>
                         <td className="border px-3 py-2 text-right">
                           {(Number(variant.weight) || 0).toFixed(1)}
