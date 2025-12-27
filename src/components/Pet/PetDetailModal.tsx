@@ -21,6 +21,7 @@ type PetDetail = {
   healthStatus?: string;
   vaccinated?: string | number | boolean;
   neutered?: string | number | boolean;
+  status?: string;
   isDeleted?: string;
   createdDate?: string;
   updatedDate?: string;
@@ -143,6 +144,10 @@ export default function PetDetailModal({
                 <p className="text-sm text-gray-700">
                   <span className="font-semibold">Health Status: </span>
                   {pet.healthStatus || "N/A"}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">Status: </span>
+                  {pet.status || "N/A"}
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
                   <span className="font-semibold">Vaccinated: </span>

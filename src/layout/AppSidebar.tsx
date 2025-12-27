@@ -59,6 +59,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Pet List", path: "/pet/list" },
       { name: "Add Pet", path: "/pet/add" },
+      { name: "Adopts", path: "/adopt" },
     ],
   },
   {

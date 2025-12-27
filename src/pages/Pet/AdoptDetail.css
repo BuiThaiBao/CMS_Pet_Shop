@@ -1,0 +1,67 @@
+
+:root{
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --muted:#6b7280;
+  --radius:10px;
+}
+.adopt-detail-root{
+  .adopt-detail-root{
+    padding:28px 24px 48px 180px; /* leave space on left for sidebar, better align to left */
+    background:var(--bg);
+    min-height:60vh;
+  }
+  .adopt-detail-wrap{
+    width:760px; /* make the content wider like the screenshot */
+    margin:0; /* align left instead of center */
+  }
+  .adopt-detail-card{
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(15,23,42,0.08);
+    padding:26px 28px;
+    border:1px solid rgba(15,23,42,0.04);
+  }
+  .adopt-detail-card h2{
+    margin:0 0 12px 0;
+    font-size:18px;
+  }
+  .adopt-grid{
+    display:grid;
+    grid-template-columns: 1fr; /* single column to match screenshot */
+    gap:6px 36px;
+    align-items:start;
+  }
+  .adopt-grid .field{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding:6px 0;
+  }
+  .adopt-grid .label{ color:var(--muted); font-weight:800; width:120px }
+  .adopt-grid .value{ color:#111827 }
+  .adopt-detail-actions{ margin-top:18px; display:flex; gap:16px }
+  .btn{ padding:12px 18px; border-radius:8px; cursor:pointer; border:none; font-weight:700; font-size:15px; min-width:120px }
+  .btn-approve{ background:#16a34a; color:#fff }
+  .btn-approve:hover{ filter:brightness(.95) }
+  .btn-reject{ background:#ef4444; color:#fff }
+  .btn-reject:hover{ filter:brightness(.95) }
+  .btn-select{ background:#059669; color:#fff }
+  .status-badge{ display:inline-block; padding:8px 12px; border-radius:6px; font-weight:800; font-size:13px }
+  .status-badge.pending{ background:#f59e0b; color:#111827 }
+  .status-badge.approved{ background:#10b981; color:#fff }
+  .status-badge.rejected{ background:#ef4444; color:#fff }
+  .status-badge.completed{ background:#6b7280; color:#fff }
+  .status-badge.canceled{ background:#6b7280; color:#fff }
+
+  /* back button */
+  .btn-back{ background:transparent; color:#111827; padding:6px 10px; border-radius:6px; margin-bottom:12px; font-weight:700 }
+  .btn-back:hover{ background:rgba(15,23,42,0.04) }
+
+  /* responsive */
+  @media (max-width:900px){
+    .adopt-detail-root{ padding-left:24px }
+    .adopt-detail-wrap{ width:100%; padding-right:24px }
+  }
+}
+

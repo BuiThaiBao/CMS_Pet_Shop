@@ -17,6 +17,7 @@ export default function PetList() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const [totalElements, setTotalElements] = useState<number>(0);
   // Filter states
+  const [status, setStatus] = useState("");
   const [animal, setAnimal] = useState("");
   const [size, setSize] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
@@ -60,6 +61,13 @@ export default function PetList() {
     { value: "Adult", label: "Adult (3-7 years)" },
     { value: "Senior", label: "Senior (> 7 years)" },
   ];
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "AVAILABLE", label: "Available" },
+    { value: "ADOPTED", label: "Adopted" },
+    { value: "PENDING_APPROVAL", label: "Pending" },
+
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -72,12 +80,12 @@ export default function PetList() {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNumber, pageSize, animal, size, ageGroup]);
+  }, [pageNumber, pageSize, animal, size, ageGroup, status]);
 
   useEffect(() => {
     // Reset to page 1 when filters change
     setPageNumber(1);
-  }, [animal, size, ageGroup]);
+  }, [animal, size, ageGroup, status]);
 
   const loadPets = async (page: number, pageSizeParam: number) => {
     setLoading(true);
@@ -101,6 +109,7 @@ export default function PetList() {
       if (animal) params.animal = animal;
       if (size) params.size = size; // Filter size (Small/Medium/Big)
       if (ageGroup) params.ageGroup = ageGroup;
+      if (status) params.status = status;
       params.isDeleted = "";
       
       const query = new URLSearchParams(params).toString();
@@ -237,6 +246,7 @@ export default function PetList() {
                 <Select options={animalOptions} value={animal} onChange={setAnimal} placeholder="All Animals" />
                 <Select options={sizeOptions} value={size} onChange={setSize} placeholder="All Sizes" />
                 <Select options={ageGroupOptions} value={ageGroup} onChange={setAgeGroup} placeholder="All Age Groups" />
+                <Select options={statusOptions} value={status} onChange={setStatus} placeholder="All Statuses" />
               </div>
             </div>
             <div className="overflow-x-auto">

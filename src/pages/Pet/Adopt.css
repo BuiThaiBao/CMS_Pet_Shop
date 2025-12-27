@@ -1,0 +1,12 @@
+.adopt-page { padding: 1rem; }
+.adopt-header { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+.adopt-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.adopt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.form-label { display:block; margin-bottom:.25rem; color:#374151; font-weight:500 }
+.form-select, .form-control { width:100%; padding:.5rem .75rem; border:1px solid #d1d5db; border-radius:6px; }
+.btn-primary { background:#0ea5a4; color:#fff; padding:.5rem .75rem; border-radius:6px; border:none; }
+.adopt-table { width:100%; border-collapse:collapse; }
+.adopt-table thead th { text-align:left; padding:.5rem; color:#374151; font-weight:600; border-bottom:1px solid #e5e7eb }
+.adopt-table tbody td { padding:.6rem; color:#4b5563 }
+.adopt-empty { text-align:center; padding:2rem; color:#9ca3af }
+.adopt-card-row { border-top:1px solid #f3f4f6 }
