@@ -5,6 +5,7 @@ import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
 import serviceApi from "../../services/api/serviceApi";
 import Select from "../../components/form/Select";
+import { PlusIcon, TrashBinIcon } from "../../icons";
 
 export default function ServiceAdd() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function ServiceAdd() {
   const [description, setDescription] = useState("");
   const [durationMinutes, setDurationMinutes] = useState<number | string>("");
   const [price, setPrice] = useState<number | string>("");
+  const [bookingTimes, setBookingTimes] = useState([{ startTime: "", maxCapacity: "" }]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,10 @@ export default function ServiceAdd() {
         description,
         durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
         price: price ? Number(price) : undefined,
+        bookingTimes: bookingTimes.map(slot => ({
+          startTime: slot.startTime,
+          maxCapacity: Number(slot.maxCapacity)
+        })),
       };
       const res = await serviceApi.create(payload);
       const data = res?.data;
@@ -61,6 +67,7 @@ export default function ServiceAdd() {
     setDescription("");
     setDurationMinutes("");
     setPrice("");
+    setBookingTimes([{ startTime: "", maxCapacity: "" }]);
   };
 
   return (
@@ -154,6 +161,56 @@ export default function ServiceAdd() {
                 min="0"
               />
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm text-gray-600 mb-2">Booking Times</label>
+            {bookingTimes.map((slot, index) => (
+              <div key={index} className="flex items-center gap-2 mb-2">
+                <input
+                  type="time"
+                  value={slot.startTime}
+                  onChange={(e) => {
+                    const newSlots = [...bookingTimes];
+                    newSlots[index].startTime = e.target.value;
+                    setBookingTimes(newSlots);
+                  }}
+                  className="border rounded px-3 py-2"
+                  required
+                />
+                <input
+                  type="number"
+                  value={slot.maxCapacity}
+                  onChange={(e) => {
+                    const newSlots = [...bookingTimes];
+                    newSlots[index].maxCapacity = e.target.value;
+                    setBookingTimes(newSlots);
+                  }}
+                  className="border rounded px-3 py-2 w-20"
+                  placeholder="Max"
+                  min="1"
+                  required
+                />
+                {bookingTimes.length > 1 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setBookingTimes(bookingTimes.filter((_, i) => i !== index));
+                    }}
+                  >
+                    <TrashBinIcon className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setBookingTimes([...bookingTimes, { startTime: "", maxCapacity: "" }])}
+            >
+              Add Slot
+            </Button>
           </div>
 
           <div className="mt-6 flex items-center gap-3">

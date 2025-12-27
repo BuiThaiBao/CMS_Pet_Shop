@@ -5,6 +5,14 @@ import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
 import serviceApi from "../../services/api/serviceApi";
 import Button from "../../components/ui/button/Button";
+import { Dropdown } from "../../components/ui/dropdown/Dropdown";
+
+type TimeTemplate = {
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  isDeleted?: string; // "0" = active, "1" = deleted/inactive
+};
 
 type ServiceItem = {
   id: number;
@@ -16,6 +24,7 @@ type ServiceItem = {
   isActive?: string;
   createdDate?: string;
   updatedDate?: string;
+  timeTemplates?: TimeTemplate[];
 };
 
 function Service() {
@@ -34,6 +43,19 @@ function Service() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     "asc"
   );
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [updatingBookingTimes, setUpdatingBookingTimes] = useState<
+    Set<string>
+  >(new Set());
+  const [showAddTimeForm, setShowAddTimeForm] = useState<number | null>(null);
+  const [newTimeSlot, setNewTimeSlot] = useState<{
+    startTime: string;
+    maxCapacity: string;
+  }>({
+    startTime: "",
+    maxCapacity: "",
+  });
+  const [addingTimeSlot, setAddingTimeSlot] = useState<number | null>(null);
 
   // Tải dữ liệu
   useEffect(() => {
@@ -165,6 +187,132 @@ function Service() {
     });
   };
 
+  const formatTime = (timeString: string) => {
+    // Format from "09:00:00" to "09:00"
+    const parts = timeString.split(":");
+    if (parts.length >= 2) {
+      return `${parts[0]}:${parts[1]}`;
+    }
+    return timeString;
+  };
+
+  const toggleDropdown = (serviceId: number) => {
+    const isOpening = openDropdownId !== serviceId;
+    setOpenDropdownId(isOpening ? serviceId : null);
+    if (!isOpening) {
+      // Close add form when closing dropdown
+      setShowAddTimeForm(null);
+      setNewTimeSlot({ startTime: "", maxCapacity: "" });
+    }
+  };
+
+  const toggleAddTimeForm = (serviceId: number) => {
+    setShowAddTimeForm(showAddTimeForm === serviceId ? null : serviceId);
+    if (showAddTimeForm === serviceId) {
+      // Reset form when closing
+      setNewTimeSlot({ startTime: "", maxCapacity: "" });
+    }
+  };
+
+  const handleAddTimeSlot = async (serviceId: number) => {
+    if (!newTimeSlot.startTime || !newTimeSlot.maxCapacity) {
+      setError("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
+    setAddingTimeSlot(serviceId);
+    const prevItems = [...items];
+
+    // Optimistic update
+    const newTemplate: TimeTemplate = {
+      startTime: `${newTimeSlot.startTime}:00`,
+      endTime: "", // Will be calculated by backend
+      maxCapacity: Number(newTimeSlot.maxCapacity),
+      isDeleted: "0",
+    };
+    setItems((prev) =>
+      prev.map((service) => {
+        if (service.id === serviceId) {
+          return {
+            ...service,
+            timeTemplates: [...(service.timeTemplates || []), newTemplate],
+          };
+        }
+        return service;
+      })
+    );
+
+    try {
+      await serviceApi.addTimeSlot({
+        serviceId,
+        startTime: newTimeSlot.startTime,
+        maxCapacity: Number(newTimeSlot.maxCapacity),
+      });
+      
+      // Reset form
+      setNewTimeSlot({ startTime: "", maxCapacity: "" });
+      setShowAddTimeForm(null);
+      
+      // Reload services to get updated data from server
+      await fetchServices(pageNumber, pageSize, query);
+    } catch (err: any) {
+      // Revert on error
+      setItems(prevItems);
+      setError(err?.message || "Failed to add time slot");
+    } finally {
+      setAddingTimeSlot(null);
+    }
+  };
+
+  const updateBookingTimeStatus = async (
+    serviceId: number,
+    startTime: string,
+    newIsDeleted: "0" | "1"
+  ) => {
+    const timeOnly = startTime.substring(0, 5); // "09:00:00" -> "09:00"
+    const key = `${serviceId}-${timeOnly}`;
+    const prevItems = [...items];
+
+    // Optimistic update: update isDeleted in timeTemplates
+    setItems((prev) =>
+      prev.map((service) => {
+        if (service.id === serviceId && service.timeTemplates) {
+          return {
+            ...service,
+            timeTemplates: service.timeTemplates.map((template) => {
+              const templateTimeOnly = template.startTime.substring(0, 5);
+              if (templateTimeOnly === timeOnly) {
+                return { ...template, isDeleted: newIsDeleted };
+              }
+              return template;
+            }),
+          };
+        }
+        return service;
+      })
+    );
+
+    const updating = new Set(updatingBookingTimes);
+    updating.add(key);
+    setUpdatingBookingTimes(updating);
+
+    try {
+      await serviceApi.updateBookingTimeActive({
+        serviceId,
+        time: timeOnly,
+        isDeleted: newIsDeleted, // "0" = active (green), "1" = deleted/inactive (red)
+      });
+    } catch (err: any) {
+      // Revert on error
+      setItems(prevItems);
+      setError(err?.message || "Failed to update booking time status");
+    } finally {
+      const after = new Set(updatingBookingTimes);
+      after.delete(key);
+      setUpdatingBookingTimes(after);
+    }
+  };
+
   return (
     <>
       <PageMeta title="Service" description="Service list" />
@@ -230,6 +378,9 @@ function Service() {
                       Price
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
+                      Time Slots
+                    </th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
@@ -240,7 +391,7 @@ function Service() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center">
+                      <td colSpan={8} className="py-8 text-center">
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                         </div>
@@ -249,7 +400,7 @@ function Service() {
                   ) : items.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="py-8 text-center text-gray-500"
                       >
                         No services found
@@ -276,6 +427,204 @@ function Service() {
                         </td>
                         <td className="py-4 px-4 text-sm font-semibold text-indigo-600">
                           {s.price ? formatCurrency(s.price) : "-"}
+                        </td>
+                        <td className="py-4 px-4">
+                          {s.timeTemplates && s.timeTemplates.length > 0 ? (
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => toggleDropdown(s.id)}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors dropdown-toggle"
+                              >
+                                <span>
+                                  {s.timeTemplates.length} time slot
+                                  {s.timeTemplates.length > 1 ? "s" : ""}
+                                </span>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className={`h-4 w-4 transition-transform ${
+                                    openDropdownId === s.id
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </button>
+                              <Dropdown
+                                isOpen={openDropdownId === s.id}
+                                onClose={() => setOpenDropdownId(null)}
+                                className="min-w-[320px] max-h-[300px] overflow-y-auto"
+                              >
+                                <div className="py-2">
+                                  <div className="px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                                    <span className="text-xs font-semibold text-gray-500 uppercase">
+                                      Time Slots
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleAddTimeForm(s.id);
+                                      }}
+                                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
+                                    >
+                                      + Add Time
+                                    </button>
+                                  </div>
+                                  {showAddTimeForm === s.id && (
+                                    <div
+                                      className="px-4 py-3 border-b border-gray-200 bg-gray-50"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex-1">
+                                            <label className="block text-xs text-gray-600 mb-1">
+                                              Start Time
+                                            </label>
+                                            <input
+                                              type="time"
+                                              value={newTimeSlot.startTime}
+                                              onChange={(e) =>
+                                                setNewTimeSlot({
+                                                  ...newTimeSlot,
+                                                  startTime: e.target.value,
+                                                })
+                                              }
+                                              className="w-full border rounded px-2 py-1.5 text-sm"
+                                              step="60"
+                                              aria-label="Start Time"
+                                              title="Start Time"
+                                              disabled={addingTimeSlot === s.id}
+                                            />
+                                          </div>
+                                          <div className="w-24">
+                                            <label className="block text-xs text-gray-600 mb-1">
+                                              Capacity
+                                            </label>
+                                            <input
+                                              type="number"
+                                              value={newTimeSlot.maxCapacity}
+                                              onChange={(e) =>
+                                                setNewTimeSlot({
+                                                  ...newTimeSlot,
+                                                  maxCapacity: e.target.value,
+                                                })
+                                              }
+                                              className="w-full border rounded px-2 py-1.5 text-sm"
+                                              placeholder="Max"
+                                              min="1"
+                                              aria-label="Max Capacity"
+                                              title="Max Capacity"
+                                              disabled={addingTimeSlot === s.id}
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleAddTimeSlot(s.id)}
+                                            disabled={addingTimeSlot === s.id}
+                                            className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          >
+                                            {addingTimeSlot === s.id ? "Adding..." : "Add"}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setShowAddTimeForm(null);
+                                              setNewTimeSlot({
+                                                startTime: "",
+                                                maxCapacity: "",
+                                              });
+                                            }}
+                                            disabled={addingTimeSlot === s.id}
+                                            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {s.timeTemplates.map((template, index) => {
+                                    const timeOnly = template.startTime.substring(
+                                      0,
+                                      5
+                                    );
+                                    // isDeleted "0" = active (green), "1" = deleted/inactive (red)
+                                    const isDeleted = template.isDeleted || "0";
+                                    const isActive = isDeleted === "0";
+                                    const key = `${s.id}-${timeOnly}`;
+                                    const isUpdating =
+                                      updatingBookingTimes.has(key);
+
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                                        onClick={(e) => {
+                                          // Prevent closing dropdown when clicking on item
+                                          e.stopPropagation();
+                                        }}
+                                      >
+                                        <div className="flex items-center justify-between gap-3">
+                                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            <span className="font-medium whitespace-nowrap">
+                                              {formatTime(template.startTime)} -{" "}
+                                              {formatTime(template.endTime)}
+                                            </span>
+                                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                                              Capacity: {template.maxCapacity}
+                                            </span>
+                                          </div>
+                                          <div
+                                            className="flex items-center gap-2"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <Switch
+                                              key={`${key}-${isDeleted}`}
+                                              defaultChecked={isActive}
+                                              onChange={(checked) =>
+                                                updateBookingTimeStatus(
+                                                  s.id,
+                                                  template.startTime,
+                                                  checked ? "0" : "1"
+                                                )
+                                              }
+                                              disabled={isUpdating}
+                                              label=""
+                                              color={isActive ? "green" : "red"}
+                                            />
+                                            <span
+                                              className={`text-xs font-medium min-w-[60px] ${
+                                                isActive
+                                                  ? "text-green-600"
+                                                  : "text-red-600"
+                                              }`}
+                                            >
+                                              {isActive ? "Active" : "Inactive"}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </Dropdown>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
@@ -307,7 +656,21 @@ function Service() {
                         <td className="py-4 px-4">
                           <button
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                            onClick={() => navigate(`/service/edit/${s.id}`)}
+                            onClick={() =>
+                              navigate(`/service/edit/${s.id}`, {
+                                state: {
+                                  serviceData: {
+                                    name: s.name,
+                                    title: s.title,
+                                    description: s.description,
+                                    durationMinutes: s.durationMinutes,
+                                    price: s.price,
+                                    isActive: s.isActive,
+                                    timeTemplates: s.timeTemplates || [],
+                                  },
+                                },
+                              })
+                            }
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
