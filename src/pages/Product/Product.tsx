@@ -108,7 +108,7 @@ export default function Product() {
         pageNumber: page,
         size,
         search: q ?? undefined,
-        sort: sortDirection ? `name,${sortDirection}` : undefined,
+        sort: sortDirection ? `id,${sortDirection}` : undefined,
         categoryId: selectedCategoryId ? Number(selectedCategoryId) : undefined,
       };
       const res = await productApi.list(params, { signal: controller.signal });
