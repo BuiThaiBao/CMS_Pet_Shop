@@ -188,7 +188,7 @@ export default function ServiceEdit() {
         setError(data?.message || "Unknown response");
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to update service");
+      setError(err?.response?.data?.message || err?.message || "Failed to update service");
     } finally {
       setLoading(false);
     }
@@ -237,19 +237,19 @@ export default function ServiceEdit() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Tên dịch vụ *
+                Icon *
               </label>
               <Select
                 options={serviceOptions}
                 onChange={setName}
                 defaultValue={name}
-                placeholder="Chọn loại dịch vụ"
+                placeholder="Chọn loại icon"
                 required
                 dropdown
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Title</label>
+              <label className="block text-sm text-gray-600 mb-1">Tên dịch vụ</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}

@@ -84,6 +84,13 @@ const serviceApi = {
   addTimeSlot: (payload: AddTimeSlotPayload) => {
     return http.post("/booking-times/add-time", payload);
   },
+
+  /**
+   * Check if service title exists
+   */
+  checkTitle: (title: string) => {
+    return http.post("/services/check-title", { title });
+  },
 };
 
 export default serviceApi;

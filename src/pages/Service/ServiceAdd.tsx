@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
 import serviceApi from "../../services/api/serviceApi";
 import Select from "../../components/form/Select";
-import { PlusIcon, TrashBinIcon } from "../../icons";
+import { TrashBinIcon } from "../../icons";
 
 export default function ServiceAdd() {
   const navigate = useNavigate();
@@ -18,6 +18,20 @@ export default function ServiceAdd() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [titleSuccess, setTitleSuccess] = useState<string | null>(null);
+  const titleCheckTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!title.trim()) {
+      setTitleError(null);
+      setTitleSuccess(null);
+      if (titleCheckTimeoutRef.current) {
+        clearTimeout(titleCheckTimeoutRef.current);
+        titleCheckTimeoutRef.current = null;
+      }
+    }
+  }, [title]);
 
   const serviceOptions = [
     { value: "veterinary", label: "Dịch vụ thú y" },
@@ -55,7 +69,7 @@ export default function ServiceAdd() {
         setError(data?.message || "Unknown response");
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to create service");
+      setError(err?.response?.data?.message || err?.message || "Failed to create service");
     } finally {
       setLoading(false);
     }
@@ -68,7 +82,50 @@ export default function ServiceAdd() {
     setDurationMinutes("");
     setPrice("");
     setBookingTimes([{ startTime: "", maxCapacity: "" }]);
+    setTitleError(null);
+    setTitleSuccess(null);
   };
+
+  const checkTitle = useCallback(async (value: string) => {
+    if (!value.trim()) {
+      setTitleError(null);
+      setTitleSuccess(null);
+      return;
+    }
+    try {
+      const res = await serviceApi.checkTitle(value);
+      const data = res?.data;
+      if (data?.success && data?.result) {
+        if (!data.result.valid) {
+          setTitleError(data.result.message);
+          setTitleSuccess(null);
+        } else {
+          setTitleError(null);
+          setTitleSuccess("Tên dịch vụ hợp lệ");
+        }
+      } else {
+        setTitleError(null);
+        setTitleSuccess(null);
+      }
+    } catch (err) {
+      setTitleError(null);
+      setTitleSuccess(null);
+    }
+  }, []);
+
+  const debouncedCheckTitle = useCallback((value: string) => {
+    if (titleCheckTimeoutRef.current) {
+      clearTimeout(titleCheckTimeoutRef.current);
+    }
+    if (!value.trim()) {
+      setTitleError(null);
+      setTitleSuccess(null);
+      return;
+    }
+    titleCheckTimeoutRef.current = setTimeout(() => {
+      checkTitle(value);
+    }, 500);
+  }, [checkTitle]);
 
   return (
     <>
@@ -100,7 +157,7 @@ export default function ServiceAdd() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Tên dịch vụ *
+                Icon *
               </label>
               <Select
                 options={serviceOptions}
@@ -112,13 +169,24 @@ export default function ServiceAdd() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Title</label>
+              <label className="block text-sm text-gray-600 mb-1">Tên dịch vụ *</label>
               <input
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTitleError(null);
+                  setTitleSuccess(null);
+                  debouncedCheckTitle(e.target.value);
+                }}
                 className="w-full border rounded px-3 py-2"
                 placeholder="Enter service title"
               />
+              {titleError && (
+                <p className="text-red-500 text-sm mt-1">{titleError}</p>
+              )}
+              {titleSuccess && (
+                <p className="text-green-500 text-sm mt-1">{titleSuccess}</p>
+              )}
             </div>
           </div>
 
@@ -175,8 +243,10 @@ export default function ServiceAdd() {
                     newSlots[index].startTime = e.target.value;
                     setBookingTimes(newSlots);
                   }}
-                  className="border rounded px-3 py-2"
+                  className="border rounded px-3 py-2 w-32"
                   required
+                  aria-label="Start Time"
+                  title="Start Time"
                 />
                 <input
                   type="number"
@@ -190,6 +260,8 @@ export default function ServiceAdd() {
                   placeholder="Max"
                   min="1"
                   required
+                  aria-label="Max Capacity"
+                  title="Max Capacity"
                 />
                 {bookingTimes.length > 1 && (
                   <Button
@@ -214,14 +286,16 @@ export default function ServiceAdd() {
           </div>
 
           <div className="mt-6 flex items-center gap-3">
-            <Button
-              size="md"
-              type="submit"
-              disabled={loading}
-              className="bg-indigo-600"
-            >
-              {loading ? "Saving..." : "Save"}
-            </Button>
+            {name && title && bookingTimes.some(slot => slot.startTime && slot.maxCapacity) && (
+              <Button
+                size="md"
+                type="submit"
+                disabled={loading}
+                className="bg-indigo-600"
+              >
+                {loading ? "Saving..." : "Save"}
+              </Button>
+            )}
             <Button size="md" variant="outline" type="button" onClick={reset}>
               Reset
             </Button>
