@@ -1,7 +1,5 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import PageMeta from "../../components/common/PageMeta";
 import {
   getDashboardSummary,
@@ -12,6 +10,7 @@ import {
   getRevenueByAnimalType,
   getTopCustomers,
   getDailyRevenue,
+  getWeeklyRevenue,
 } from "../../services/api/statisticsApi";
 
 // Status labels in Vietnamese
@@ -29,6 +28,7 @@ type ReportType =
   | "orders" 
   | "monthly" 
   | "daily"
+  | "weekly"
   | "products" 
   | "category" 
   | "animal" 
@@ -53,20 +53,27 @@ const formatDate = (date: Date): string => {
   return date.toISOString().split("T")[0];
 };
 
-const today = formatDate(new Date());
+// Get start and end of current month
+const getMonthRange = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { start: formatDate(start), end: formatDate(end) };
+};
 
 export default function Report() {
   const [loading, setLoading] = useState<ReportType | null>(null);
   const [message, setMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<ReportType | null>(null);
+  const monthRange = getMonthRange();
   const [params, setParams] = useState<ReportParams>({
     selectedMonth: currentMonth,
     selectedYear: currentYear,
     productLimit: 10,
     productSortBy: "revenue",
     customerLimit: 10,
-    startDate: today,
-    endDate: today,
+    startDate: monthRange.start,
+    endDate: monthRange.end,
   });
 
   const showMessage = (msg: string) => {
@@ -238,19 +245,13 @@ export default function Report() {
 
   const exportDailyRevenue = async () => {
     try {
-      // Validate date range
-      if (new Date(params.startDate) > new Date(params.endDate)) {
-        showMessage("Lỗi: Ngày bắt đầu không được lớn hơn ngày kết thúc!");
-        return;
-      }
-      
       setLoading("daily");
       setShowModal(null);
       const data = await getDailyRevenue(params.startDate, params.endDate);
       
       if (data.length === 0) {
         downloadExcel([{
-          "Khoảng thời gian": `${params.startDate} đến ${params.endDate}`,
+          "Ngày": `${params.startDate} - ${params.endDate}`,
           "Doanh thu (VNĐ)": 0,
           "Số đơn hàng": 0,
         }], `bao_cao_doanh_thu_theo_ngay`, "Doanh thu theo ngày");
@@ -262,7 +263,35 @@ export default function Report() {
         }));
         downloadExcel(formattedData, `bao_cao_doanh_thu_theo_ngay`, "Doanh thu theo ngày");
       }
-      showMessage(`Xuất báo cáo doanh thu từ ${params.startDate} đến ${params.endDate} thành công!`);
+      showMessage(`Xuất báo cáo doanh thu theo ngày thành công!`);
+    } catch (err) {
+      showMessage("Lỗi xuất báo cáo: " + err);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const exportWeeklyRevenue = async () => {
+    try {
+      setLoading("weekly");
+      setShowModal(null);
+      const data = await getWeeklyRevenue(params.startDate, params.endDate);
+      
+      if (data.length === 0) {
+        downloadExcel([{
+          "Tuần": `${params.startDate} - ${params.endDate}`,
+          "Doanh thu (VNĐ)": 0,
+          "Số đơn hàng": 0,
+        }], `bao_cao_doanh_thu_theo_tuan`, "Doanh thu theo tuần");
+      } else {
+        const formattedData = data.map(d => ({
+          "Tuần": d.weekLabel,
+          "Doanh thu (VNĐ)": d.revenue,
+          "Số đơn hàng": d.orderCount,
+        }));
+        downloadExcel(formattedData, `bao_cao_doanh_thu_theo_tuan`, "Doanh thu theo tuần");
+      }
+      showMessage(`Xuất báo cáo doanh thu theo tuần thành công!`);
     } catch (err) {
       showMessage("Lỗi xuất báo cáo: " + err);
     } finally {
@@ -359,7 +388,7 @@ export default function Report() {
 
   // Determine if report type needs params
   const needsParams = (type: ReportType): boolean => {
-    return ["monthly", "daily", "products", "customers", "all"].includes(type);
+    return ["monthly", "daily", "weekly", "products", "customers", "all"].includes(type);
   };
 
   const handleExportClick = (type: ReportType, exportFn: () => void) => {
@@ -374,7 +403,8 @@ export default function Report() {
     { id: "all" as ReportType, name: "Báo cáo tổng hợp", desc: "Tất cả thống kê (nhiều sheet)", action: exportAll, icon: "📊", hasParams: true },
     { id: "summary" as ReportType, name: "Tổng quan Dashboard", desc: "Tổng đơn, doanh thu, khách hàng", action: exportSummary, icon: "📈", hasParams: false },
     { id: "orders" as ReportType, name: "Trạng thái đơn hàng", desc: "Số đơn theo từng trạng thái", action: exportOrderStatus, icon: "📦", hasParams: false },
-    { id: "daily" as ReportType, name: "Doanh thu theo ngày", desc: "Chọn khoảng thời gian", action: exportDailyRevenue, icon: "📆", hasParams: true },
+    { id: "daily" as ReportType, name: "Doanh thu theo ngày", desc: "Doanh thu từng ngày (chọn khoảng)", action: exportDailyRevenue, icon: "📆", hasParams: true },
+    { id: "weekly" as ReportType, name: "Doanh thu theo tuần", desc: "Doanh thu từng tuần (chọn khoảng)", action: exportWeeklyRevenue, icon: "📅", hasParams: true },
     { id: "monthly" as ReportType, name: "Doanh thu theo tháng", desc: "Doanh thu tháng cụ thể", action: exportMonthlyRevenue, icon: "🗓️", hasParams: true },
     { id: "products" as ReportType, name: "Sản phẩm bán chạy", desc: "Top N sản phẩm", action: exportTopProducts, icon: "🏆", hasParams: true },
     { id: "category" as ReportType, name: "Doanh thu theo danh mục", desc: "Phân tích doanh thu từng danh mục", action: exportCategoryRevenue, icon: "🗂️", hasParams: false },
@@ -389,65 +419,43 @@ export default function Report() {
     if (!report) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[99999]">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
             {report.icon} {report.name}
           </h3>
           
           <div className="space-y-4">
-            {/* Daily Revenue - Date Range Picker with Calendar */}
-            {showModal === "daily" && (
+            {/* Daily/Weekly Revenue Params - Date Range */}
+            {(showModal === "daily" || showModal === "weekly") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Từ ngày
                   </label>
-                  <DatePicker
-                    selected={new Date(params.startDate)}
-                    onChange={(date: Date | null) => {
-                      if (date) {
-                        const newStartDate = formatDate(date);
-                        // Auto-adjust endDate if startDate becomes greater
-                        if (new Date(newStartDate) > new Date(params.endDate)) {
-                          setParams({ ...params, startDate: newStartDate, endDate: newStartDate });
-                        } else {
-                          setParams({ ...params, startDate: newStartDate });
-                        }
-                      }
-                    }}
-                    dateFormat="dd/MM/yyyy"
+                  <input
+                    type="date"
+                    value={params.startDate}
+                    onChange={(e) => setParams({ ...params, startDate: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    calendarClassName="!bg-white dark:!bg-gray-800"
-                    showPopperArrow={false}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Đến ngày
                   </label>
-                  <DatePicker
-                    selected={new Date(params.endDate)}
-                    onChange={(date: Date | null) => {
-                      if (date) setParams({ ...params, endDate: formatDate(date) });
-                    }}
-                    dateFormat="dd/MM/yyyy"
-                    minDate={new Date(params.startDate)}
+                  <input
+                    type="date"
+                    value={params.endDate}
+                    onChange={(e) => setParams({ ...params, endDate: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    calendarClassName="!bg-white dark:!bg-gray-800"
-                    showPopperArrow={false}
                   />
                 </div>
-                {new Date(params.startDate) > new Date(params.endDate) && (
-                  <div className="col-span-2 text-red-500 text-sm">
-                    ⚠️ Ngày bắt đầu không được lớn hơn ngày kết thúc!
-                  </div>
-                )}
               </div>
             )}
 
             {/* Monthly Revenue Params */}
-            {showModal === "monthly" && (
+            {(showModal === "monthly") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
