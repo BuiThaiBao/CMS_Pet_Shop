@@ -34,6 +34,7 @@ import PetAdd from "./pages/Pet/PetAdd";
 import PetEdit from "./pages/Pet/PetEdit";
 import Adopt from "./pages/Pet/Adopt";
 import AdoptDetail from "./pages/Pet/AdoptDetail";
+import Report from "./pages/Dashboard/Report";
 export default function App() {
   return (
     <>
@@ -49,6 +50,7 @@ export default function App() {
             }
           >
             <Route index path="/" element={<Home />} />
+            <Route path="/report" element={<Report />} />
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />

@@ -57,6 +57,21 @@ export interface TopCustomer {
   orderCount: number;
 }
 
+export interface DailyRevenue {
+  date: string;
+  dateLabel: string;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface WeeklyRevenue {
+  year: number;
+  weekNumber: number;
+  weekLabel: string;
+  revenue: number;
+  orderCount: number;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -159,6 +174,34 @@ export const getTopCustomers = async (
   const response = await statisticsHttp.get<ApiResponse<TopCustomer[]>>(
     `${STATISTICS_BASE}/customers/top`,
     { params: { limit } }
+  );
+  return response.data.result;
+};
+
+/**
+ * Get daily revenue within a date range
+ */
+export const getDailyRevenue = async (
+  startDate: string,
+  endDate: string
+): Promise<DailyRevenue[]> => {
+  const response = await statisticsHttp.get<ApiResponse<DailyRevenue[]>>(
+    `${STATISTICS_BASE}/revenue/daily`,
+    { params: { startDate, endDate } }
+  );
+  return response.data.result;
+};
+
+/**
+ * Get weekly revenue within a date range
+ */
+export const getWeeklyRevenue = async (
+  startDate: string,
+  endDate: string
+): Promise<WeeklyRevenue[]> => {
+  const response = await statisticsHttp.get<ApiResponse<WeeklyRevenue[]>>(
+    `${STATISTICS_BASE}/revenue/weekly`,
+    { params: { startDate, endDate } }
   );
   return response.data.result;
 };
