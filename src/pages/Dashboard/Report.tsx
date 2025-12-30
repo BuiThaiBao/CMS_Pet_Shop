@@ -389,7 +389,7 @@ export default function Report() {
     if (!report) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
             {report.icon} {report.name}
