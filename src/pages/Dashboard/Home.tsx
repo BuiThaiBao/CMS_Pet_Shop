@@ -1,39 +1,44 @@
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "../../components/ecommerce/StatisticsChart";
-import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
-import RecentOrders from "../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../components/ecommerce/DemographicCard";
+import OrderStatusChart from "../../components/ecommerce/OrderStatusChart";
+import CategoryRevenueChart from "../../components/ecommerce/CategoryRevenueChart";
+import TopProductsTable from "../../components/ecommerce/TopProductsTable";
+import TopCustomersTable from "../../components/ecommerce/TopCustomersTable";
 import PageMeta from "../../components/common/PageMeta";
 
 export default function Home() {
   return (
     <>
       <PageMeta
-        title="React.js Ecommerce Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Admin Dashboard | PetShop CMS"
+        description="Quản lý và thống kê doanh thu, đơn hàng, khách hàng, sản phẩm"
       />
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
-        <div className="col-span-12 space-y-6 xl:col-span-7">
-          <EcommerceMetrics />
+      
+      <div className="space-y-6">
+        {/* Row 1: Metrics Cards */}
+        <EcommerceMetrics />
 
-          <MonthlySalesChart />
+        {/* Row 2: Monthly Sales + Order Status */}
+        <div className="grid grid-cols-12 gap-4 md:gap-6">
+          <div className="col-span-12 xl:col-span-7">
+            <MonthlySalesChart />
+          </div>
+          <div className="col-span-12 xl:col-span-5">
+            <OrderStatusChart />
+          </div>
         </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
-        </div>
+        {/* Row 3: Category Revenue Chart */}
+        <CategoryRevenueChart />
 
-        <div className="col-span-12">
-          <StatisticsChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
-        </div>
-
-        <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
+        {/* Row 4: Top Products + Top Customers */}
+        <div className="grid grid-cols-12 gap-4 md:gap-6">
+          <div className="col-span-12 xl:col-span-7">
+            <TopProductsTable />
+          </div>
+          <div className="col-span-12 xl:col-span-5">
+            <TopCustomersTable />
+          </div>
         </div>
       </div>
     </>
