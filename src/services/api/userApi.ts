@@ -19,6 +19,11 @@ interface ApiResponse<T> {
   result: T;
 }
 
+// Response type for email search
+export interface SearchEmailResponse {
+  emails: string[];
+}
+
 export const userApi = {
   // Lấy thông tin user hiện tại
   async getMyInfo(signal?: AbortSignal): Promise<UserInfo> {
@@ -26,6 +31,14 @@ export const userApi = {
       signal,
     });
     return res.data.result;
+  },
+
+  // Search emails by keyword for autocomplete
+  searchEmail: (keyword: string) => {
+    return http.post<ApiResponse<SearchEmailResponse>>(
+      `/users/search-email`,
+      { keyword }
+    );
   },
 };
 

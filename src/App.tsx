@@ -11,7 +11,7 @@ import UserProfiles from "./pages/User/UserProfiles";
 // import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
-import Calendar from "./pages/Calendar";
+import Calendar from "./pages/ServiceCalendar/Calendar";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
