@@ -308,7 +308,7 @@ export default function PetList() {
                     <th className="py-3 px-4">Breed</th>
                     <th className="py-3 px-4">Age</th>
                     <th className="py-3 px-4">Gender</th>
-                    <th className="py-3 px-4">Size</th>
+                    <th className="py-3 px-4">Weight</th>
                     <th className="py-3 px-4">Age Group</th>
                     <th className="py-3 px-4">Health Status</th>
                     <th className="py-3 px-4">Status</th>
@@ -340,7 +340,7 @@ export default function PetList() {
                         <td className="py-4 px-4">{pet.breed}</td>
                         <td className="py-4 px-4">{pet.age}</td>
                         <td className="py-4 px-4">{pet.gender}</td>
-                        <td className="py-4 px-4">{pet.size}</td>
+                        <td className="py-4 px-4">{pet.weight}</td>
                         <td className="py-4 px-4">{pet.ageGroup}</td>
                         <td className="py-4 px-4">{pet.healthStatus || "Good"}</td>
                         <td className="py-4 px-4">{pet.status}</td> 

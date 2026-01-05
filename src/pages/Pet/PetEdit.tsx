@@ -15,7 +15,7 @@ export default function PetEdit() {
   const [breed, setBreed] = useState<string>("");
   const [age, setAge] = useState<string>("");
   const [ageGroup, setAgeGroup] = useState<string>("");
-  const [size, setSize] = useState<string>("");
+  const [weight, setWeight] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [healthStatus, setHealthStatus] = useState<string>("");
@@ -33,12 +33,6 @@ export default function PetEdit() {
     { value: "Child", label: "Child (1-3 years)" },
     { value: "Adult", label: "Adult (3-7 years)" },
     { value: "Senior", label: "Senior (> 7 years)" },
-  ];
-
-  const sizeOptions = [
-    { value: "Small", label: "Small" },
-    { value: "Medium", label: "Medium" },
-    { value: "Big", label: "Big" },
   ];
 
   const genderOptions = [
@@ -70,17 +64,13 @@ export default function PetEdit() {
           setBreed(data.breed || "");
           setAge(data.age !== undefined && data.age !== null ? String(data.age) : "");
           setAgeGroup(data.ageGroup || "");
-          setSize(data.size || "");
+          setWeight(data.weight !== undefined && data.weight !== null ? String(data.weight) : "");
           setGender(data.gender || "");
           setDescription(data.description || "");
           setHealthStatus(data.healthStatus || "");
           const vaccinatedRaw = data.vaccinated;
           const neuteredRaw = data.neutered;
-          setVaccinated(
-            vaccinatedRaw === true ||
-              vaccinatedRaw === 1 ||
-              vaccinatedRaw === "1"
-          );
+          setWeight(data.weight !== undefined && data.weight !== null ? String(data.weight) : "");
           setNeutered(
             neuteredRaw === true || neuteredRaw === 1 || neuteredRaw === "1"
           );
@@ -124,6 +114,11 @@ export default function PetEdit() {
       return;
     }
 
+    if (weight && Number(weight) <= 0) {
+      setError("Weight must be greater than 0.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -135,7 +130,7 @@ export default function PetEdit() {
         breed,
         age: age ? Number(age) : undefined,
         ageGroup,
-        size,
+        weight: weight ? Number(weight) : undefined,
         gender,
         description,
         healthStatus,
@@ -262,12 +257,20 @@ export default function PetEdit() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Size</label>
-              <Select
-                options={sizeOptions}
-                value={size}
-                onChange={(val) => setSize(val)}
-                placeholder="Select Size"
+              <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={weight}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) {
+                    setWeight(val);
+                  }
+                }}
+                className="w-full border rounded px-3 py-2"
+                placeholder="Enter weight"
               />
             </div>
             <div>
