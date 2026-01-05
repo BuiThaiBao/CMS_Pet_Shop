@@ -64,6 +64,7 @@ interface ProductDetailModalProps {
   onClose: () => void;
   productId: number | null;
   onOpenUpload?: (productId: number) => void;
+  onProductUpdate?: () => void;
 }
 
 export default function ProductDetailModal({
@@ -71,6 +72,7 @@ export default function ProductDetailModal({
   onClose,
   productId,
   onOpenUpload,
+  onProductUpdate,
 }: ProductDetailModalProps) {
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -186,6 +188,8 @@ export default function ProductDetailModal({
   };
 
   const handleToggleVariantDeleted = async (variant: ProductVariant) => {
+    console.log("Toggling variant:", variant);
+    console.log("Current parent product:", product);
     const newDeletedStatus = variant.isDeleted === "1" ? "0" : "1";
 
     // Set loading state
@@ -227,6 +231,9 @@ export default function ProductDetailModal({
           });
         }
         setError(data?.message || "Failed to update variant status");
+      } else {
+        if (product) fetchProductDetail(product.id);
+        onProductUpdate?.();
       }
     } catch (err: any) {
       console.error("Toggle variant deleted error:", err);

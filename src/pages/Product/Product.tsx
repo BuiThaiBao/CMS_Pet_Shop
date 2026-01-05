@@ -162,6 +162,8 @@ export default function Product() {
     const current = items.find((it) => it.id === id);
     if (!current) return;
 
+    console.log("Current product being toggled:", current);
+
     const prevItems = items;
     const nextItems = items.map((it) => {
       if (it.id !== id) return it;
@@ -629,6 +631,7 @@ export default function Product() {
         onClose={handleCloseDetailModal}
         productId={selectedProductId}
         onOpenUpload={handleOpenUploadModal}
+        onProductUpdate={() => fetchProducts(pageNumber, pageSize, query)}
       />
 
       {/* Product Image Upload Modal */}
