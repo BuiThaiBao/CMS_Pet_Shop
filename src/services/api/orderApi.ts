@@ -22,6 +22,10 @@ export const orderApi = {
   updateStatus(data: any) {
     return http.put(`/orders/update-status`, data);
   },
+
+  getDetail(orderId: number) {
+    return http.get(`/orders/detail/${orderId}`);
+  },
 };
 
 export default orderApi;

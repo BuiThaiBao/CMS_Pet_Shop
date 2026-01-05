@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Select from "../../components/form/Select";
@@ -41,7 +42,7 @@ type Order = {
 /* ================= STATUS TRANSITION ================= */
 
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  WAITING_PAYMENT: ["PROCESSING", "CANCELLED"],
+  WAITING_PAYMENT: [],
   PROCESSING: ["SHIPPED", "CANCELLED"],
   SHIPPED: ["DELIVERED"],
   DELIVERED: ["COMPLETED"],
@@ -61,6 +62,7 @@ const BULK_BUTTON_STYLE: Record<OrderStatus, string> = {
 /* ================= PAGE ================= */
 
 export default function OrderPage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<Order[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
@@ -293,19 +295,20 @@ export default function OrderPage() {
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Created At</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center">
+                  <td colSpan={7} className="p-6 text-center">
                     Loading...
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-gray-500">
+                  <td colSpan={7} className="p-6 text-center text-gray-500">
                     No orders found
                   </td>
                 </tr>
@@ -352,12 +355,82 @@ export default function OrderPage() {
                     <td className="px-4 py-4 text-sm text-gray-600">
                       {o.createdDate}
                     </td>
+
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => navigate(`/orders/${o.id}`)}
+                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        View Details
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+
+        {/* ================= PAGINATION ================= */}
+        {totalPages > 0 && (
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {Math.min((pageNumber - 1) * pageSize + 1, totalElements)} to{" "}
+              {Math.min(pageNumber * pageSize, totalElements)} of {totalElements} orders
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPageNumber(pageNumber - 1)}
+                disabled={pageNumber === 1}
+                className="px-3 py-2 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Previous
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                // Show first page, last page, current page, and pages around current
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= pageNumber - 1 && page <= pageNumber + 1)
+                ) {
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setPageNumber(page)}
+                      className={`px-3 py-2 border rounded-lg text-sm ${
+                        page === pageNumber
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                } else if (
+                  page === pageNumber - 2 ||
+                  page === pageNumber + 2
+                ) {
+                  return (
+                    <span key={page} className="px-2 text-gray-400">
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+
+              <button
+                onClick={() => setPageNumber(pageNumber + 1)}
+                disabled={pageNumber === totalPages}
+                className="px-3 py-2 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
