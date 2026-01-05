@@ -167,7 +167,7 @@ const Calendar: React.FC = () => {
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(59, 130, 246, 0.95)' }}></div>
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">Đã xác nhận</span>
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Đã đặt lịch</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(34, 197, 94, 0.95)' }}></div>
