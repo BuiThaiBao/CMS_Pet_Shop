@@ -18,7 +18,7 @@ interface AppointmentDetailModalProps {
 const getStatusLabel = (status: AppointmentStatus): string => {
     switch (status) {
         case "SCHEDULED":
-            return "Đã xác nhận";
+            return "Đã đặt lịch";
         case "COMPLETED":
             return "Hoàn thành";
         case "CANCELED":
@@ -44,7 +44,7 @@ const getStatusColorClass = (status: AppointmentStatus): string => {
 
 // Status options for dropdown
 const STATUS_OPTIONS: { value: AppointmentStatus; label: string }[] = [
-    { value: "SCHEDULED", label: "Đã xác nhận" },
+    { value: "SCHEDULED", label: "Đã đặt lịch" },
     { value: "COMPLETED", label: "Hoàn thành" },
     { value: "CANCELED", label: "Đã hủy" },
 ];
