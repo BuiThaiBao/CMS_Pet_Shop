@@ -34,7 +34,7 @@ export default function PetAdd() {
       setAgeGroup("Senior");
     }
   };
-  const [size, setSize] = useState<string>("");
+  const [weight, setWeight] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [healthStatus, setHealthStatus] = useState<string>("");
@@ -57,12 +57,6 @@ export default function PetAdd() {
     { value: "Child", label: "Child (1-3 years)" },
     { value: "Adult", label: "Adult (3-7 years)" },
     { value: "Senior", label: "Senior (> 7 years)" },
-  ];
-
-  const sizeOptions = [
-    { value: "Small", label: "Small" },
-    { value: "Medium", label: "Medium" },
-    { value: "Big", label: "Big" },
   ];
 
   const genderOptions = [
@@ -186,8 +180,13 @@ export default function PetAdd() {
   // ==================== Submit Logic ====================
 
   const handleSubmit = async () => {
-    if (!name || !animal || !breed || !age || !ageGroup || !size || !gender) {
+    if (!name || !animal || !breed || !age || !ageGroup || !weight || !gender) {
       setError("Please fill in all required fields.");
+      return;
+    }
+
+    if (Number(weight) <= 0) {
+      setError("Weight must be greater than 0.");
       return;
     }
 
@@ -207,7 +206,7 @@ export default function PetAdd() {
         breed,
         age: Number(age),
         ageGroup,
-        size,
+        weight: Number(weight),
         gender,
         description,
         healthStatus,
@@ -240,7 +239,7 @@ export default function PetAdd() {
       breed && breed.trim() &&
       age !== "" &&
       ageGroup &&
-      size &&
+      weight !== "" &&
       gender &&
       petImages.length > 0
   );
@@ -364,14 +363,21 @@ export default function PetAdd() {
                   </div>
                   <div className="w-full xl:w-1/3">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Size <span className="text-meta-1">*</span>
+                      Weight (kg) <span className="text-meta-1">*</span>
                     </label>
-                    <Select
-                      options={sizeOptions}
-                      value={size}
-                      onChange={(val) => setSize(val)}
-                      placeholder="Select Size"
-                      required
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Enter weight"
+                      value={weight}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "" || Number(val) >= 0) {
+                          setWeight(val);
+                        }
+                      }}
+                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
                     />
                   </div>
                   <div className="w-full xl:w-1/3">

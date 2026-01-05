@@ -13,7 +13,7 @@ export interface CreatePetPayload {
   breed: string;
   age: number;
   ageGroup: string;
-  size: string;
+  weight: number;
   gender: string;
   description: string;
   healthStatus: string;
@@ -28,7 +28,7 @@ export interface UpdatePetPayload {
   breed?: string;
   age?: number;
   ageGroup?: string;
-  size?: string;
+  weight?: number;
   gender?: string;
   description?: string;
   healthStatus?: string;
