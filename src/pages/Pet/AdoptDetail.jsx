@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import adoptApi from '../../services/api/adoptApi';
 import http from '../../services/api/http';
 import './AdoptDetail.css';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 export default function AdoptDetail() {
   const { id } = useParams();
@@ -11,6 +12,8 @@ export default function AdoptDetail() {
   const [adopt, setAdopt] = useState(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const fetchDetail = async (adoptId) => {
     if (!adoptId) return;
@@ -51,19 +54,9 @@ export default function AdoptDetail() {
 
   const updateStatus = async (newStatus) => {
     if (!adopt?.adoptId) return;
-    if(newStatus === "APPROVED") {
-      if (!window.confirm(`Bạn có chắc muốn duyệt đơn nhận nuôi này không?`)) return;
-    }
-    else if (newStatus === "REJECTED") {
-      if (!window.confirm(`Bạn có chắc muốn từ chối đơn nhận nuôi này không?`)) return;
-    }
-    else if( newStatus === "COMPLETED") {
-      if (!window.confirm(`Bạn có chắc muốn chấp nhận người nhận nuôi này không?`)) return;
-    }
 
     setUpdating(true);
     try {
-      // correct API method name (adoptApi uses updateStautusAdopt)
       if (typeof adoptApi.updateStautusAdopt === 'function') {
         await adoptApi.updateStautusAdopt(adopt.adoptId, newStatus);
       } else if (typeof adoptApi.updateStatusAdopt === 'function') {
@@ -75,14 +68,11 @@ export default function AdoptDetail() {
       alert('Cập nhật trạng thái thành công');
     } catch (err) {
       console.error('Update status error', err, err?.response?.data);
-      // if server returned 400 (Bad Request) try fallback payloads
       const statusCode = err?.response?.status;
       if (statusCode === 400) {
         try {
-          console.log('Retrying with fallback body {status, adoptId}');
           const url = `/adopt/status/${adopt.adoptId}`;
-          const r1 = await http.put(url, { status: newStatus, adoptId: adopt.adoptId });
-          console.log('Fallback r1 success', r1);
+          await http.put(url, { status: newStatus, adoptId: adopt.adoptId });
           await fetchDetail(adopt.adoptId);
           alert('Cập nhật trạng thái thành công (fallback)');
           setUpdating(false);
@@ -92,9 +82,7 @@ export default function AdoptDetail() {
         }
 
         try {
-          console.log('Retrying with alternate endpoint /adopt/status (body: {id, status})');
-          const r2 = await http.put('/adopt/status', { id: adopt.adoptId, status: newStatus });
-          console.log('Fallback r2 success', r2);
+          await http.put('/adopt/status', { id: adopt.adoptId, status: newStatus });
           await fetchDetail(adopt.adoptId);
           alert('Cập nhật trạng thái thành công (fallback2)');
           setUpdating(false);
@@ -110,18 +98,44 @@ export default function AdoptDetail() {
     }
   };
 
-  const acceptAdopter = async () => {
-    // when accepting adopter, set status to COMPLETED
-    if (!adopt || !adopt.adoptId) return;
-    await updateStatus('COMPLETED');
+  const getStatusLabel = (status) => {
+    const labels = {
+      PENDING: 'Đang chờ duyệt',
+      APPROVED: 'Đã duyệt',
+      REJECTED: 'Đã từ chối',
+      COMPLETED: 'Hoàn thành',
+      CANCELED: 'Đã hủy',
+    };
+    return labels[status] || status;
+  };
+
+  const getGenderClass = (gender) => {
+    const g = String(gender).toLowerCase();
+    if (g.includes('đực') || g.includes('male')) return 'gender-male';
+    if (g.includes('cái') || g.includes('female')) return 'gender-female';
+    return '';
   };
 
   if (loading) {
-    return <div className="adopt-detail-root">Đang tải...</div>;
+    return (
+      <div className="adopt-detail-root">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Đang tải thông tin...</div>
+        </div>
+      </div>
+    );
   }
 
   if (!adopt) {
-    return <div className="adopt-detail-root">Không tìm thấy đơn nhận nuôi.</div>;
+    return (
+      <div className="adopt-detail-root">
+        <div className="empty-state">
+          <div className="empty-icon">📋</div>
+          <div className="empty-text">Không tìm thấy đơn nhận nuôi.</div>
+        </div>
+      </div>
+    );
   }
 
   const status = String(adopt.status || '');
@@ -130,83 +144,163 @@ export default function AdoptDetail() {
   return (
     <div className="adopt-detail-root">
       <div className="adopt-detail-wrap">
-        <button className="btn btn-back" onClick={() => navigate(-1)}>
-          ← Quay lại
-        </button>
-
-        <h2>Chi tiết đơn nhận nuôi</h2>
+        <div className="adopt-detail-header">
+          <button className="btn btn-back" onClick={() => navigate(-1)}>
+            ← Quay lại
+          </button>
+          <h2>Chi tiết đơn nhận nuôi</h2>
+        </div>
 
         <div className="adopt-detail-card">
-          {/* PET INFO */}
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div style={{ width: 160, height: 120, background: '#eee' }}>
+          {/* PET INFO SECTION */}
+          <div className="pet-info-section">
+            <div className="pet-image-wrapper">
               {adopt.pet?.image && (
-                <img
-                  src={adopt.pet.image}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                <img src={adopt.pet.image} alt={adopt.pet?.name || 'Pet'} />
               )}
             </div>
 
-            <div>
-              <h3>{adopt.pet?.name || '—'}</h3>
-              <div>{adopt.pet?.animal} · {adopt.pet?.breed}</div>
-              <div>{adopt.pet?.age} · {adopt.pet?.gender}</div>
+            <div className="pet-info-content">
+              <h3>{adopt.pet?.name || 'Chưa có tên'}</h3>
+              <div className="pet-meta">
+                {adopt.pet?.animal && (
+                  <span className="pet-tag">🐾 {adopt.pet.animal}</span>
+                )}
+                {adopt.pet?.breed && (
+                  <span className="pet-tag">🏷️ {adopt.pet.breed}</span>
+                )}
+                {adopt.pet?.age && (
+                  <span className="pet-tag">📅 {adopt.pet.age}</span>
+                )}
+                {adopt.pet?.gender && (
+                  <span className={`pet-tag ${getGenderClass(adopt.pet.gender)}`}>
+                    {adopt.pet.gender.toLowerCase().includes('đực') || adopt.pet.gender.toLowerCase().includes('male') ? '♂️' : '♀️'} {adopt.pet.gender}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* APPLICANT INFO */}
-          <div style={{ marginTop: 20 }}>
-            <h4>Thông tin người đăng ký</h4>
-            <div>Họ tên: {adopt.applicant?.fullName || '—'}</div>
-            <div>SĐT: {adopt.applicant?.phone || '—'}</div>
-            <div>Địa chỉ: {adopt.applicant?.address || '—'}</div>
-            <div>Nghề nghiệp: {adopt.job || '—'}</div>
-            <div>Thu nhập: {adopt.income || '—'}</div>
-            <div>Điều kiện sống: {adopt.liveCondition || '—'}</div>
+          {/* APPLICANT INFO SECTION */}
+          <div className="applicant-section">
+            <h4 className="section-title">Thông tin người đăng ký</h4>
+            <div className="applicant-grid">
+              <div className="info-item">
+                <span className="label">Họ và tên</span>
+                <span className="value">{adopt.applicant?.fullName || '—'}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Số điện thoại</span>
+                <span className="value">{adopt.applicant?.phone || '—'}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Địa chỉ</span>
+                <span className="value">{adopt.applicant?.address || '—'}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Nghề nghiệp</span>
+                <span className="value">{adopt.job || '—'}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Thu nhập</span>
+                <span className="value">{adopt.income || '—'}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Điều kiện sống</span>
+                <span className="value">{adopt.liveCondition || '—'}</span>
+              </div>
+            </div>
           </div>
 
-          {/* STATUS */}
-          <div style={{ marginTop: 20 }}>
-            <strong>Trạng thái:</strong> {status}
+          {/* NOTE SECTION */}
+          {adopt.note && (
+            <div className="note-section">
+              <h4 className="section-title">Ghi chú</h4>
+              <div className="note-content">{adopt.note}</div>
+            </div>
+          )}
+
+          {/* STATUS SECTION */}
+          <div className="status-section">
+            <strong>Trạng thái:</strong>
+            <span className={`status-badge ${status.toLowerCase()}`}>
+              {getStatusLabel(status)}
+            </span>
           </div>
 
-          {/* ACTIONS */}
+          {/* ACTIONS SECTION */}
           <div className="adopt-detail-actions">
             {status === 'PENDING' && (
               <>
                 <button
                   className="btn btn-approve"
                   disabled={updating}
-                  onClick={() => updateStatus('APPROVED')}
+                  onClick={() => { setConfirmAction('APPROVED'); setConfirmOpen(true); }}
                 >
-                  Duyệt
+                  ✓ Duyệt đơn
                 </button>
 
                 <button
                   className="btn btn-reject"
                   disabled={updating}
-                  onClick={() => updateStatus('REJECTED')}
+                  onClick={() => { setConfirmAction('REJECTED'); setConfirmOpen(true); }}
                 >
-                  Không duyệt
+                  ✕ Từ chối
                 </button>
               </>
             )}
 
             {status === 'APPROVED' && (
-              <button className="btn btn-select" disabled={updating} onClick={acceptAdopter}>
-                Chấp nhận người nhận nuôi
+              <button
+                className="btn btn-select"
+                disabled={updating}
+                onClick={() => { setConfirmAction('COMPLETED'); setConfirmOpen(true); }}
+              >
+                ✓ Chấp nhận người nhận nuôi
               </button>
             )}
 
             {noActions && (
-              /* no action buttons for REJECTED, CANCELED, COMPLETED */
-              null
+              <div style={{ color: 'var(--adopt-muted)', fontStyle: 'italic', fontSize: '14px' }}>
+                Đơn này đã được xử lý xong.
+              </div>
             )}
           </div>
-        </div> {/* adopt-detail-card */}
-      </div> {/* adopt-detail-wrap */}
-    </div> /* adopt-detail-root */
+        </div>
+
+        <ConfirmModal
+          isOpen={confirmOpen}
+          title={
+            confirmAction === 'APPROVED'
+              ? 'Xác nhận duyệt đơn'
+              : confirmAction === 'REJECTED'
+                ? 'Xác nhận từ chối đơn'
+                : 'Xác nhận chấp nhận người nhận nuôi'
+          }
+          message={
+            confirmAction === 'APPROVED'
+              ? 'Bạn có chắc muốn duyệt đơn nhận nuôi này không?'
+              : confirmAction === 'REJECTED'
+                ? 'Bạn có chắc muốn từ chối đơn nhận nuôi này không?'
+                : 'Bạn có chắc muốn chấp nhận người nhận nuôi này không?'
+          }
+          onClose={() => { setConfirmOpen(false); setConfirmAction(null); }}
+          onConfirm={async () => {
+            if (!confirmAction) return;
+            await updateStatus(confirmAction);
+            setConfirmOpen(false);
+            setConfirmAction(null);
+          }}
+          confirmLabel={
+            confirmAction === 'REJECTED'
+              ? 'Từ chối'
+              : confirmAction === 'APPROVED'
+                ? 'Duyệt'
+                : 'Chấp nhận'
+          }
+          loading={updating}
+        />
+      </div>
+    </div>
   );
 }
