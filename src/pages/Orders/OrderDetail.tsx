@@ -1,0 +1,333 @@
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import PageMeta from "../../components/common/PageMeta";
+import Alert from "../../components/ui/alert/Alert";
+import orderApi from "../../services/api/orderApi";
+import { OrderStatus } from "./Order";
+
+/* ================= TYPES ================= */
+
+type OrderDetailItem = {
+  orderId: number;
+  orderCode: string;
+  status: string;
+  shippingAmount: number;
+  totalAmount: number;
+  shippingAddress: string;
+  orderDate: string;
+  orderItemId: number;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  productName: string;
+  variantId: number;
+  variantPrice: number;
+  stockQuantity: number;
+  imageUrl?: string;
+};
+
+/* ================= STATUS TRANSITION ================= */
+
+const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  WAITING_PAYMENT: [],
+  PROCESSING: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["DELIVERED"],
+  DELIVERED: ["COMPLETED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+const BUTTON_STYLE: Record<OrderStatus, string> = {
+  WAITING_PAYMENT: "bg-blue-600 hover:bg-blue-700",
+  PROCESSING: "bg-indigo-600 hover:bg-indigo-700",
+  SHIPPED: "bg-emerald-600 hover:bg-emerald-700",
+  DELIVERED: "bg-green-600 hover:bg-green-700",
+  COMPLETED: "bg-gray-500",
+  CANCELLED: "bg-red-600 hover:bg-red-700",
+};
+
+/* ================= PAGE ================= */
+
+export default function OrderDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const [orderDetails, setOrderDetails] = useState<OrderDetailItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    fetchOrderDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  async function fetchOrderDetail() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await orderApi.getDetail(Number(id));
+      const result = res?.data?.result;
+
+      if (!result || result.length === 0) {
+        setError("Order not found");
+        return;
+      }
+
+      setOrderDetails(result);
+    } catch (err: any) {
+      setError(err?.message || "Failed to fetch order details");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Get order header info from first item
+  const orderInfo = orderDetails[0];
+
+  const STATUS_STYLE: Record<string, string> = {
+    WAITING_PAYMENT: "bg-yellow-100 text-yellow-700",
+    PROCESSING: "bg-blue-100 text-blue-700",
+    SHIPPED: "bg-indigo-100 text-indigo-700",
+    DELIVERED: "bg-emerald-100 text-emerald-700",
+    COMPLETED: "bg-green-100 text-green-700",
+    CANCELLED: "bg-red-100 text-red-700",
+  };
+
+  // Calculate subtotal (sum of all items)
+  const subtotal = orderDetails.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  // Get available status transitions
+  const availableStatuses = useMemo<OrderStatus[]>(() => {
+    if (!orderInfo) return [];
+    return VALID_TRANSITIONS[orderInfo.status as OrderStatus] || [];
+  }, [orderInfo]);
+
+  // Handle status update
+  async function handleStatusUpdate(newStatus: OrderStatus) {
+    if (!orderInfo) return;
+
+    try {
+      setUpdating(true);
+
+      await orderApi.updateStatus({
+        orderUpdateList: [
+          {
+            id: orderInfo.orderId,
+            orderCode: orderInfo.orderCode,
+            orderStatus: newStatus,
+          },
+        ],
+      });
+
+      // Refresh order details
+      fetchOrderDetail();
+    } catch (err: any) {
+      alert(err?.message || "Update failed");
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <>
+        <PageMeta title="Order Detail" description="View order details" />
+        <div className="p-4">
+          <div className="text-center py-8">Loading...</div>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !orderInfo) {
+    return (
+      <>
+        <PageMeta title="Order Detail" description="View order details" />
+        <div className="p-4">
+          <Alert variant="error" title="Error" message={error || "Order not found"} />
+          <button
+            onClick={() => navigate("/orders")}
+            className="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Back to Orders
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <PageMeta title={`Order ${orderInfo.orderCode}`} description="View order details" />
+
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold">Order Details</h1>
+          <button
+            onClick={() => navigate("/orders")}
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Back to Orders
+          </button>
+        </div>
+
+        {/* Status Transition Actions */}
+        {availableStatuses.length > 0 && (
+          <div className="mb-4 flex items-center gap-3 flex-wrap">
+            <span className="text-sm text-gray-600">Change Status:</span>
+            {availableStatuses.map((status) => (
+              <button
+                key={status}
+                disabled={updating}
+                onClick={() => handleStatusUpdate(status)}
+                className={`px-4 py-2 rounded text-white text-sm ${BUTTON_STYLE[status]} disabled:opacity-50`}
+              >
+                {status.replace("_", " ")}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Order Information Card */}
+        <div className="bg-white border rounded-lg p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Order Information</h2>
+              
+              <div className="space-y-3">
+                <div>
+                  <span className="text-sm text-gray-500">Order Code</span>
+                  <p className="font-medium">{orderInfo.orderCode}</p>
+                </div>
+
+                <div>
+                  <span className="text-sm text-gray-500">Status</span>
+                  <div className="mt-1">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-medium ${
+                        STATUS_STYLE[orderInfo.status] || "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {orderInfo.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-sm text-gray-500">Order Date</span>
+                  <p className="font-medium">{orderInfo.orderDate}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Shipping Information</h2>
+              
+              <div className="space-y-3">
+                <div>
+                  <span className="text-sm text-gray-500">Shipping Address</span>
+                  <p className="font-medium">{orderInfo.shippingAddress}</p>
+                </div>
+
+                <div>
+                  <span className="text-sm text-gray-500">Shipping Cost</span>
+                  <p className="font-medium">{orderInfo.shippingAmount.toLocaleString()} đ</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Order Items Table */}
+        <div className="bg-white border rounded-lg overflow-hidden mb-6">
+          <div className="p-4 border-b bg-gray-50">
+            <h2 className="text-lg font-semibold">Order Items</h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b bg-gray-50 text-sm text-gray-500">
+                <tr>
+                  <th className="px-4 py-3 text-left">Product</th>
+                  <th className="px-4 py-3 text-left">Variant Details</th>
+                  <th className="px-4 py-3 text-right">Unit Price</th>
+                  <th className="px-4 py-3 text-center">Quantity</th>
+                  <th className="px-4 py-3 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderDetails.map((item) => (
+                  <tr key={item.orderItemId} className="border-b">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        {item.imageUrl && (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.productName}
+                            className="w-16 h-16 object-cover rounded"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{item.productName}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm">
+                        <p className="text-gray-600">Variant ID: {item.variantId}</p>
+                        <p className="text-gray-600">Stock: {item.stockQuantity}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-right font-medium">
+                      {item.unitPrice.toLocaleString()} đ
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="inline-block px-3 py-1 bg-gray-100 rounded">
+                        {item.quantity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right font-semibold">
+                      {item.totalPrice.toLocaleString()} đ
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Order Summary */}
+        <div className="bg-white border rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+          
+          <div className="max-w-md ml-auto space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium">{subtotal.toLocaleString()} đ</span>
+            </div>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Shipping</span>
+              <span className="font-medium">{orderInfo.shippingAmount.toLocaleString()} đ</span>
+            </div>
+            
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between">
+                <span className="font-semibold">Total</span>
+                <span className="font-bold text-lg text-blue-600">
+                  {orderInfo.totalAmount.toLocaleString()} đ
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

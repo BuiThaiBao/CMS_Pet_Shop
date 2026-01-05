@@ -29,6 +29,7 @@ import Service from "./pages/Service/Service";
 import ServiceAdd from "./pages/Service/ServiceAdd";
 import ServiceEdit from "./pages/Service/ServiceEdit";
 import OrderPage from "./pages/Orders/Order";
+import OrderDetail from "./pages/Orders/OrderDetail";
 import PetList from "./pages/Pet/PetList";
 import PetAdd from "./pages/Pet/PetAdd";
 import PetEdit from "./pages/Pet/PetEdit";
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/category/add" element={<CategoryAdd />} />
             <Route path="/category/edit/:id" element={<CategoryEdit />} />
             <Route path="/orders" element={<OrderPage />} />
+            <Route path="/orders/:id" element={<OrderDetail />} />
             <Route path="/product" element={<Product />} />
             <Route path="/product/add" element={<ProductAdd />} />
             <Route
