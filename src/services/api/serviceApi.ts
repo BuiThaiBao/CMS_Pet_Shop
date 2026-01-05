@@ -28,6 +28,41 @@ export type ServicePayload = {
   bookingTimeUpdates?: BookingTimeUpdate[];
 };
 
+// Response type for active services
+export interface ServicePetResponse {
+  id: number;
+  name: string;
+  title?: string;
+  description?: string;
+  durationMinutes?: number;
+  price?: number;
+  isActive?: string;
+}
+
+// Response type for available booking times
+export interface BookingTimeResponse {
+  id: number;
+  slotDate: string; // Format: "2024-12-30"
+  startTime: string; // Format: "09:00:00"
+  endTime: string; // Format: "10:00:00"
+  maxCapacity: number;
+  bookedCount: number;
+  availableCount: number;
+}
+
+// Request type for available booking times
+export interface AvailableBookingTimeRequest {
+  serviceId: number;
+  date: string; // Format: "2024-12-30"
+}
+
+// Generic API response
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  result: T;
+}
+
 const serviceApi = {
   /**
    * Get paginated list of services
@@ -90,6 +125,20 @@ const serviceApi = {
    */
   checkTitle: (title: string) => {
     return http.post("/services/check-title", { title });
+  },
+
+  /**
+   * Get all active services
+   */
+  getActiveServices: () => {
+    return http.get<ApiResponse<ServicePetResponse[]>>("/services/active");
+  },
+
+  /**
+   * Get available booking times for a service on a specific date
+   */
+  getAvailableBookingTimes: (request: AvailableBookingTimeRequest) => {
+    return http.post<ApiResponse<BookingTimeResponse[]>>("/booking-times/available", request);
   },
 };
 
