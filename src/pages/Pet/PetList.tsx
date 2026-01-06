@@ -35,28 +35,14 @@ export default function PetList() {
   } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Animal options lấy từ API
-  const [animalOptions, setAnimalOptions] = useState([
-    { value: "", label: t('pet.allAnimals') }
-  ]);
-
-  useEffect(() => {
-    // Lấy danh sách animal từ API (dùng cho admin)
-    const fetchAnimals = async () => {
-      try {
-        const res = await petApi.getAnimalsForAdmin();
-        // Giả sử trả về mảng string tên animal
-        const arr = res.data?.result || [];
-        setAnimalOptions([
-          { value: "", label: t('pet.allAnimals') },
-          ...arr.map((a: string) => ({ value: a, label: a }))
-        ]);
-      } catch (e) {
-        // fallback giữ lại All Animals
-      }
-    };
-    fetchAnimals();
-  }, []);
+  const animalOptions = [
+    { value: "", label: t('pet.allAnimals') },
+    { value: "DOG", label: "Chó" },
+    { value: "CAT", label: "Mèo" },
+    { value: "BIRD", label: "Chim" },
+    { value: "RABBIT", label: "Thỏ" },
+    { value: "OTHER", label: "Khác" },
+  ];
   const sizeOptions = [
     { value: "", label: t('pet.allSizes') },
     { value: "Small", label: t('pet.small') },

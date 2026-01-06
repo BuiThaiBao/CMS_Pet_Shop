@@ -38,28 +38,28 @@ export default function PetEdit() {
   const [error, setError] = useState<string | null>(null);
 
   const ageGroupOptions = [
-    { value: "Young", label: "Young (< 1 year)" },
-    { value: "Child", label: "Child (1-3 years)" },
-    { value: "Adult", label: "Adult (3-7 years)" },
-    { value: "Senior", label: "Senior (> 7 years)" },
+    { value: "Young", label: "(< 1 năm)" },
+    { value: "Child", label: "(1-3 năm)" },
+    { value: "Adult", label: "(3-7 năm)" },
+    { value: "Senior", label: "(> 7 năm)" },
   ];
 
   const genderOptions = [
-    { value: "Male", label: "Male" },
-    { value: "Female", label: "Female" },
+    { value: "Male", label: "Đực" },
+    { value: "Female", label: "Cái" },
   ];
 
   const animalOptions = [
-    { value: "DOG", label: "Dog" },
-    { value: "CAT", label: "Cat" },
-    { value: "BIRD", label: "Bird" },
-    { value: "RABBIT", label: "Rabbit" },
-    { value: "OTHER", label: "Other" },
+    { value: "DOG", label: "Chó" },
+    { value: "CAT", label: "Mèo" },
+    { value: "BIRD", label: "Chim" },
+    { value: "RABBIT", label: "Thỏ" },
+    { value: "OTHER", label: "Khác" },
   ];
 
   const healthStatusOptions = [
-    { value: "BAD", label: "Bad" },
-    { value: "GOOD", label: "Good" },
+    { value: "BAD", label: "Xấu" },
+    { value: "GOOD", label: "Tốt" },
   ];
 
   useEffect(() => {
@@ -385,7 +385,7 @@ export default function PetEdit() {
 
           <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
             <div className="w-full xl:w-1/2">
-              <label className="mb-2.5 block text-black dark:text-white">Pet Name</label>
+              <label className="mb-2.5 block text-black dark:text-white">Tên thú cưng</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -396,7 +396,7 @@ export default function PetEdit() {
             </div>
             <div className="w-full xl:w-1/2">
               <label className="mb-2.5 block text-black dark:text-white">
-                Animal Type
+                Loại động vật
               </label>
               <Select
                 options={animalOptions}
@@ -410,7 +410,7 @@ export default function PetEdit() {
 
           <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
             <div className="w-full xl:w-1/2">
-              <label className="mb-2.5 block text-black dark:text-white">Breed</label>
+              <label className="mb-2.5 block text-black dark:text-white">Loài</label>
               <input
                 value={breed}
                 onChange={(e) => setBreed(e.target.value)}
@@ -420,7 +420,7 @@ export default function PetEdit() {
               />
             </div>
             <div className="w-full xl:w-1/2">
-              <label className="mb-2.5 block text-black dark:text-white">Age</label>
+              <label className="mb-2.5 block text-black dark:text-white">Tuổi</label>
               <input
                 type="number"
                 value={age}
@@ -434,7 +434,7 @@ export default function PetEdit() {
           <div className="mb-4.5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className="mb-2.5 block text-black dark:text-white">
-                Age Group
+                Nhóm tuổi
               </label>
               <Select
                 options={ageGroupOptions}
@@ -444,7 +444,7 @@ export default function PetEdit() {
               />
             </div>
             <div>
-              <label className="mb-2.5 block text-black dark:text-white">Weight (kg)</label>
+              <label className="mb-2.5 block text-black dark:text-white">Cân nặng (kg)</label>
               <input
                 type="number"
                 min="0"
@@ -461,19 +461,19 @@ export default function PetEdit() {
               />
             </div>
             <div>
-              <label className="mb-2.5 block text-black dark:text-white">Gender</label>
+              <label className="mb-2.5 block text-black dark:text-white">Giới tính</label>
               <Select
                 options={genderOptions}
                 value={gender}
                 onChange={(val) => setGender(val)}
-                placeholder="Select Gender"
+                placeholder="Chọn giới tính"
               />
             </div>
           </div>
 
           <div className="mt-4">
             <label className="mb-2.5 block text-black dark:text-white">
-              Description
+              Mô tả
             </label>
             <textarea
               value={description}
@@ -486,7 +486,7 @@ export default function PetEdit() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="mb-2.5 block text-black dark:text-white">
-                Health Status
+                Tình trạng sức khỏe
               </label>
               <Select
                 options={healthStatusOptions}
@@ -503,7 +503,7 @@ export default function PetEdit() {
                   onChange={(e) => setVaccinated(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                 />
-                Vaccinated
+                  Đã tiêm phòng
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-700">
                 <input
@@ -512,21 +512,21 @@ export default function PetEdit() {
                   onChange={(e) => setNeutered(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                 />
-                Neutered
+                Đã triệt sản
               </label>
             </div>
           </div>
 
           <div className="form-grid-2 mt-4">
             <div className="w-full xl:w-1/2">
-              <label className="mb-2.5 block text-black dark:text-white">Status</label>
+              <label className="mb-2.5 block text-black dark:text-white">Kích hoạt</label>
               <select
                 value={isDeleted}
                 onChange={(e) => setIsDeleted(e.target.value)}
                 className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600"
               >
-                <option value="0">False</option>
-                <option value="1">True</option>
+                <option value="0">Chưa kích hoạt</option>
+                <option value="1">Đã kích hoạt</option>
               </select>
             </div>
           </div>
@@ -534,7 +534,7 @@ export default function PetEdit() {
           {/* Image Upload */}
           <div className="mt-4">
             <label className="mb-2.5 block text-black dark:text-white">
-              Pet Images
+              Hình ảnh thú cưng
             </label>
             <ImageUploadDropzone
               onImagesDrop={handleImageUpload}
@@ -567,7 +567,7 @@ export default function PetEdit() {
                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-center backdrop-blur-sm">
                       {img.isPrimary ? (
                         <span className="text-xs font-semibold text-white">
-                          Primary
+                          Chính
                         </span>
                       ) : (
                         <button
@@ -575,7 +575,7 @@ export default function PetEdit() {
                           onClick={() => setPrimaryImage(img.publicId)}
                           className="text-xs text-white hover:underline hover:text-indigo-200 transition-colors"
                         >
-                          Set Primary
+                          Đặt làm Chính
                         </button>
                       )}
                     </div>
@@ -592,7 +592,7 @@ export default function PetEdit() {
               disabled={loading}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Đang lưu..." : "Lưu thay đổi"}
             </Button>
             <Button
               size="md"
@@ -600,7 +600,7 @@ export default function PetEdit() {
               type="button"
               onClick={() => navigate("/pet/list")}
             >
-              Cancel
+              Hủy
             </Button>
           </div>
         </form>

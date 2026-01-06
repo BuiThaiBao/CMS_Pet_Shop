@@ -55,28 +55,28 @@ export default function PetAdd() {
 
   // Options
   const ageGroupOptions = [
-    { value: "Young", label: "Young (< 1 year)" },
-    { value: "Child", label: "Child (1-3 years)" },
-    { value: "Adult", label: "Adult (3-7 years)" },
-    { value: "Senior", label: "Senior (> 7 years)" },
+    { value: "Young", label: "(< 1 tuổi)" },
+    { value: "Child", label: "(1-3 tuổi)" },
+    { value: "Adult", label: "(3-7 tuổi)" },
+    { value: "Senior", label: "(> 7 tuổi)" },
   ];
 
   const genderOptions = [
-    { value: "Male", label: "Male" },
-    { value: "Female", label: "Female" },
+    { value: "Male", label: "Đực" },
+    { value: "Female", label: "Cái" },
   ];
 
   const animalOptions = [
-    { value: "DOG", label: "Dog" },
-    { value: "CAT", label: "Cat" },
-    { value: "BIRD", label: "Bird" },
-    { value: "RABBIT", label: "Rabbit" },
-    { value: "OTHER", label: "Other" },
+    { value: "DOG", label: "Chó" },
+    { value: "CAT", label: "Mèo" },
+    { value: "BIRD", label: "Chim" },
+    { value: "RABBIT", label: "Thỏ" },
+    { value: "OTHER", label: "Khác" },
   ];
 
   const healthStatusOptions = [
-    { value: "BAD", label: "Bad" },
-    { value: "GOOD", label: "Good" },
+    { value: "BAD", label: "Xấu" },
+    { value: "GOOD", label: "Tốt" },
   ];
 
   // ==================== Image Upload Logic ====================
@@ -261,10 +261,10 @@ export default function PetAdd() {
             <ol className="flex items-center gap-2">
               <li>
                 <a className="font-medium" href="/">
-                  Dashboard /
+                  Trang chủ /
                 </a>
               </li>
-              <li className="font-medium text-primary">Add Pet</li>
+              <li className="font-medium text-primary">Thêm thú cưng</li>
             </ol>
           </nav>
         </div>

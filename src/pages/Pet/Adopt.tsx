@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from "react-i18next";
 import adoptApi from '../../services/api/adoptApi';
 import petApi from '../../services/api/petApi';
 import './Adopt.css';
 
 export default function Adopt() {
+  const { t } = useTranslation();
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -14,6 +16,7 @@ export default function Adopt() {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [pets, setPets] = useState<any[]>([]);
 
   // Reset to first page when filters change
@@ -45,7 +48,7 @@ export default function Adopt() {
     const load = async () => {
       setLoading(true);
       try {
-        const params: any = { page: page - 1, size };
+        const params: any = { pageNumber: page, size };
         if (status) params.status = status;
         if (debouncedCode) params.code = debouncedCode;
         if (petId) params.petId = Number(petId);
@@ -58,12 +61,15 @@ export default function Adopt() {
         if (!data) {
           setList([]);
           setTotalPages(0);
+          setTotalElements(0);
         } else if (Array.isArray(data)) {
           setList(data);
           setTotalPages(1);
+          setTotalElements(data.length);
         } else {
           setList(data.content || []);
           setTotalPages(data.totalPages || 0);
+          setTotalElements(data.totalElements || 0);
         }
       } catch (err) {
         console.error('Failed to load adopts', err);
@@ -77,7 +83,7 @@ export default function Adopt() {
 
   return (
     <div className="adopt-page">
-      <h1 className="adopt-header">Adopts</h1>
+      <h1 className="adopt-header">Nhận nuôi thú cưng</h1>
 
       <div className="adopt-panel">
         <div className="adopt-grid">
@@ -85,18 +91,18 @@ export default function Adopt() {
             <label className="form-label">Trạng thái</label>
             <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">Tất cả</option>
-              <option value="PENDING">PENDING</option>
-              <option value="APPROVED">APPROVED</option>
-              <option value="REJECTED">REJECTED</option>
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="CANCELED">CANCELED</option>
+              <option value="PENDING">Chờ xác nhận</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Bị từ chối</option>
+              <option value="COMPLETED">Hoàn thành</option>
+              <option value="CANCELED">Đã hủy</option>
             </select>
           </div>
 
           <div>
-            <label className="form-label">Pet</label>
+            <label className="form-label">Thú cưng</label>
             <select className="form-select" value={petId} onChange={(e) => setPetId(e.target.value)}>
-              <option value="">All</option>
+              <option value="">Tất cả</option>
               {pets.map(p => <option key={p.id} value={p.id}>{p.name || `#${p.id}`}</option>)}
             </select>
           </div>
@@ -114,13 +120,13 @@ export default function Adopt() {
 
       <div className="adopt-panel">
         {loading ? (
-          <div className="adopt-empty">Loading...</div>
+          <div className="adopt-empty">Đang tải...</div>
         ) : (
           <table className="adopt-table">
             <thead>
               <tr>
                 <th>Mã</th>
-                <th>Pet</th>
+                <th>Thú cưng</th>
                 <th>Ngày</th>
                 <th>Trạng thái</th>
                 <th>Ghi chú</th>
@@ -154,22 +160,87 @@ export default function Adopt() {
         )}
       </div>
       {/* Pagination controls */}
-      {totalPages > 1 && (
-        <div className="adopt-panel adopt-pagination">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>Trang {page} / {totalPages} — Tổng {totalPages * size} trang</div>
-            <div className="d-flex gap-2 align-items-center">
-              <button className="btn btn-sm btn-outline-primary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pn) => (
-                <button key={pn} className={`btn btn-sm ${pn === page ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setPage(pn)}>{pn}</button>
-              ))}
-              <button className="btn btn-sm btn-outline-primary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</button>
-              <select className="form-select form-select-sm ms-2" style={{ width: 80 }} value={size} onChange={(e) => { setSize(Number(e.target.value)); setPage(1); }}>
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
+      {totalPages > 0 && (
+        <div className="adopt-panel flex items-center justify-between p-4">
+          <div className="text-sm text-gray-600">
+             Hiển thị {list.length} trên {totalElements} kết quả
+          </div>
+          <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+                aria-label="Previous page"
+                className={`w-9 h-9 flex items-center justify-center border rounded-lg ${
+                  page <= 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              {Array.from({ length: Math.max(totalPages, 0) }).map(
+                (_, idx) => {
+                  const p = idx + 1;
+                  const active = p === page;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      aria-current={active ? "page" : undefined}
+                      className={`transition-all ${
+                        active
+                          ? "w-9 h-9 flex items-center justify-center text-sm rounded-md bg-indigo-600 text-white shadow"
+                          : "px-2 text-sm text-gray-700"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                }
+              )}
+              <button
+                onClick={() => {
+                  const target = page + 1;
+                  if (totalPages && target > totalPages) return;
+                  setPage(target);
+                }}
+                disabled={totalPages ? page >= totalPages : false}
+                aria-label="Next page"
+                className={`w-9 h-9 flex items-center justify-center border rounded-lg ${
+                  totalPages && page >= totalPages
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
