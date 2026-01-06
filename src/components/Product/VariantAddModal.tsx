@@ -44,8 +44,8 @@ export default function VariantAddModal({
   const resetForm = () => {
     setVariantName("");
     setWeight("");
-    setPrice(50000);
-    setStockQuantity(50);
+    setPrice("");
+    setStockQuantity("");
     setSelectedImageId(
       productImages && productImages.length > 0 ? productImages[0].id : ""
     );
