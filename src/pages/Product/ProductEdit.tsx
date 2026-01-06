@@ -436,31 +436,60 @@ export default function ProductEdit() {
               </select>
             </div>
           </div>
+                {/* Variant Add Modal */}
+      {id && (
+        <VariantAddModal
+          isOpen={isAddVariantModalOpen}
+          onClose={handleCloseAddVariant}
+          productId={parseInt(id)}
+          productImages={productImages?.map((img) => ({
+            id: img.id,
+            imageUrl: img.imageUrl,
+            isPrimary: img.isPrimary,
+          }))}
+          onAddSuccess={handleAddVariantSuccess}
+        />
+      )}
 
-          <div className="mt-6 flex items-center gap-3">
-            <Button
-              size="md"
-              type="submit"
-              disabled={loading}
-              className="bg-indigo-600"
-            >
-              {loading ? t('common.saving') : t('common.saveChanges')}
-            </Button>
-            <Button
-              size="md"
-              variant="outline"
-              type="button"
-              onClick={() => navigate("/product")}
-            >
-              {t('common.cancel')}
-            </Button>
-          </div>
-        </form>
+      {/* Variant Edit Modal */}
+      {editingVariant && id && (
+        <VariantEditModal
+          isOpen={isEditVariantModalOpen}
+          onClose={handleCloseEditVariant}
+          variant={editingVariant}
+          productImages={productImages?.map((img) => ({
+            id: img.id,
+            imageUrl: img.imageUrl,
+            isPrimary: img.isPrimary,
+          }))}
+          onUpdateSuccess={handleEditVariantSuccess}
+        />
+      )}
 
-        {/* Product Images and Variants Section */}
+      {/* Product Image Upload Modal */}
+      {id && (
+        <ProductImageUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={handleCloseUploadModal}
+          productId={parseInt(id)}
+          onUploadSuccess={handleUploadSuccess}
+          existingImageCount={productImages?.length || 0}
+        />
+      )}
+
+      {/* Image Zoom Modal */}
+      {isImageModalOpen && selectedImage && (
+        <ImageModal
+          isOpen={isImageModalOpen}
+          onClose={handleCloseImageModal}
+          imageUrl={selectedImage}
+          alt={name || "Product Image"}
+        />
+      )}
+              {/* Product Images and Variants Section */}
         <div className="mt-6 bg-white border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Hình ảnh & Biến thể sản phẩm</h3>
+            <h3 className="text-lg font-semibold">Hình ảnh & Loại sản phẩm</h3>
             <button
               type="button"
               onClick={handleOpenUploadModal}
@@ -622,7 +651,7 @@ export default function ProductEdit() {
           {/* Variants Section */}
           <div className="mt-6">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-md font-semibold">Biến thể sản phẩm</h4>
+              <h4 className="text-md font-semibold">Loại sản phẩm</h4>
               <button
                 type="button"
                 onClick={handleOpenAddVariant}
@@ -641,7 +670,7 @@ export default function ProductEdit() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Thêm biến thể
+                Thêm loại sản phẩm
               </button>
             </div>
 
@@ -772,64 +801,35 @@ export default function ProductEdit() {
                   />
                 </svg>
                 <p className="mt-2 text-sm text-gray-500">
-                  Chưa có biến thể. Click "Thêm biến thể" để tạo mới.
+                  Chưa có loại sản phẩm. Click "Thêm loại sản phẩm" để tạo mới.
                 </p>
               </div>
             )}
           </div>
         </div>
+
+          <div className="mt-6 flex items-center gap-3 flex justify-end">
+            <Button
+              size="md"
+              type="submit"
+              disabled={loading}
+              className="bg-indigo-600 "
+            >
+              {loading ? t('common.saving') : t('common.saveChanges')}
+            </Button>
+            <Button
+              size="md"
+              variant="outline"
+              type="button"
+              onClick={() => navigate("/product")}
+            >
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </form>
+
+
       </div>
-
-      {/* Variant Add Modal */}
-      {id && (
-        <VariantAddModal
-          isOpen={isAddVariantModalOpen}
-          onClose={handleCloseAddVariant}
-          productId={parseInt(id)}
-          productImages={productImages?.map((img) => ({
-            id: img.id,
-            imageUrl: img.imageUrl,
-            isPrimary: img.isPrimary,
-          }))}
-          onAddSuccess={handleAddVariantSuccess}
-        />
-      )}
-
-      {/* Variant Edit Modal */}
-      {editingVariant && id && (
-        <VariantEditModal
-          isOpen={isEditVariantModalOpen}
-          onClose={handleCloseEditVariant}
-          variant={editingVariant}
-          productImages={productImages?.map((img) => ({
-            id: img.id,
-            imageUrl: img.imageUrl,
-            isPrimary: img.isPrimary,
-          }))}
-          onUpdateSuccess={handleEditVariantSuccess}
-        />
-      )}
-
-      {/* Product Image Upload Modal */}
-      {id && (
-        <ProductImageUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={handleCloseUploadModal}
-          productId={parseInt(id)}
-          onUploadSuccess={handleUploadSuccess}
-          existingImageCount={productImages?.length || 0}
-        />
-      )}
-
-      {/* Image Zoom Modal */}
-      {isImageModalOpen && selectedImage && (
-        <ImageModal
-          isOpen={isImageModalOpen}
-          onClose={handleCloseImageModal}
-          imageUrl={selectedImage}
-          alt={name || "Product Image"}
-        />
-      )}
     </>
   );
 }
