@@ -14,6 +14,7 @@ import {
   BoxCubeIcon,
   ShootingStarIcon,
   BoxIconLine,
+  PawIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -36,10 +37,10 @@ const navItems: NavItem[] = [
   },
   {
     icon: <CalenderIcon />,
-    name: "Appointment",
+    name: "nav.appointment",
     subItems: [
-      { name: "Lịch hẹn", path: "/calendar" },
-      { name: "Danh sách lịch", path: "/appointments" },
+      { name: "nav.appointment", path: "/calendar" },
+      { name: "nav.appointmentList", path: "/appointments" },
     ],
   },
 
@@ -60,7 +61,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <GridIcon />,
+    icon: <PawIcon />,
     name: "nav.pet",
     subItems: [
       { name: "pet.petList", path: "/pet/list" },

@@ -290,6 +290,23 @@ export default function PetList() {
             <h1 className="text-xl font-semibold">{t('pet.petList')}</h1>
             <p className="mt-2 text-sm text-gray-600">{t('pet.managePets')}</p>
           </div>
+          <button
+            onClick={() => navigate("/pet/add")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            {t('pet.addPet')}
+          </button>
         </div>
         <div className="mt-4 bg-white rounded-lg border">
           <div className="p-4">

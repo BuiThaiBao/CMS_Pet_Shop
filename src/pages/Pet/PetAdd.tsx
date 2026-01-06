@@ -261,10 +261,10 @@ export default function PetAdd() {
             <ol className="flex items-center gap-2">
               <li>
                 <a className="font-medium" href="/">
-                  Dashboard /
+                  Trang chủ /
                 </a>
               </li>
-              <li className="font-medium text-primary">Add Pet</li>
+              <li className="font-medium text-primary">Thêm thú cưng</li>
             </ol>
           </nav>
         </div>

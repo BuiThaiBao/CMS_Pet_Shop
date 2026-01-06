@@ -134,7 +134,7 @@ const AppHeader: React.FC = () => {
             {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />
             {/* <!-- Language Toggle --> */}
-            <LanguageToggle />
+            
             {/* <!-- Dark Mode Toggler --> */}
             
             {/* <!-- Notification Menu Area --> */}
