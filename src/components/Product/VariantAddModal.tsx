@@ -25,8 +25,8 @@ export default function VariantAddModal({
 }: VariantAddModalProps) {
   const [variantName, setVariantName] = useState("");
   const [weight, setWeight] = useState<number | "">("");
-  const [price, setPrice] = useState<number | "">(50000);
-  const [stockQuantity, setStockQuantity] = useState<number | "">(50);
+  const [price, setPrice] = useState<number | "">();
+  const [stockQuantity, setStockQuantity] = useState<number | "">();
   const [selectedImageId, setSelectedImageId] = useState<number | "">(
     productImages && productImages.length > 0 ? productImages[0].id : ""
   );
