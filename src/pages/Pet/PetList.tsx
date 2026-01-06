@@ -233,7 +233,7 @@ export default function PetList() {
         await petApi.restorePet(numericId);
       }
       console.log("Update successful (server persisted). UI updated optimistically.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle pet deleted state", error);
       setPets(prevPets);
       // Extract server message if available (ApiResponse.message)
