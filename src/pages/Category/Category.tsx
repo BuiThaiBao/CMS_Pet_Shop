@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
@@ -20,6 +21,7 @@ type CategoryItem = {
 };
 
 function Category() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -173,7 +175,7 @@ function Category() {
         return;
       }
       console.error(err);
-      setError(err?.message || "Failed to fetch categories");
+      setError(err?.message || t('messages.loadError'));
     } finally {
       setLoading(false);
       abortRef.current = null;
@@ -242,7 +244,7 @@ function Category() {
       const code = err?.code as string | undefined;
       if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
       console.error(err);
-      setError(err?.message || "Failed to fetch featured categories");
+      setError(err?.message || t('messages.loadError'));
     } finally {
       setLoading(false);
       abortRef.current = null;
@@ -302,7 +304,7 @@ function Category() {
       const code = err?.code as string | undefined;
       if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
       console.error(err);
-      setError(err?.message || "Failed to fetch deleted categories");
+      setError(err?.message || t('messages.loadError'));
     } finally {
       setLoading(false);
       abortRef.current = null;
@@ -356,7 +358,7 @@ function Category() {
       await categoryApi.update(id, payload);
     } catch (err: any) {
       setItems(prevItems); // revert khi lỗi
-      setError(err?.message || "Failed to update category");
+      setError(err?.message || t('messages.updateError'));
     } finally {
       const after = new Set(updatingIds);
       after.delete(id);
@@ -385,7 +387,7 @@ function Category() {
     } catch (err: any) {
       const code = err?.code as string | undefined;
       if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
-      setEditError(err?.message || "Failed to load category");
+      setEditError(err?.message || t('messages.loadError'));
     } finally {
       setEditLoading(false);
       editAbortRef.current = null;
@@ -429,7 +431,7 @@ function Category() {
       );
       closeEditModal();
     } catch (err: any) {
-      setEditError(err?.message || "Failed to update category");
+      setEditError(err?.message || t('messages.updateError'));
     } finally {
       setEditLoading(false);
     }
@@ -437,13 +439,13 @@ function Category() {
 
   return (
     <>
-      <PageMeta title="Category" description="Category list" />
+      <PageMeta title={t('category.title')} description={t('category.categoryList')} />
 
       <div className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Category List</h1>
-            <p className="mt-2 text-sm text-gray-600">Manage categories</p>
+            <h1 className="text-xl font-semibold">{t('category.title')}</h1>
+            <p className="mt-2 text-sm text-gray-600">{t('category.categoryList')}</p>
           </div>
           <Button
             size="md"
@@ -461,21 +463,21 @@ function Category() {
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add Category
+            {t('category.addCategory')}
           </Button>
         </div>
 
         <div className="mt-4 bg-white rounded-lg border">
           {error && (
             <div className="p-4">
-              <Alert variant="error" title="Error" message={error} />
+              <Alert variant="error" title={t('common.error')} message={error} />
             </div>
           )}
           <div className="p-4">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-2">
-                  Categories List
+                  {t('category.categoryList')}
                 </label>
                 <div className="relative w-80">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -494,7 +496,7 @@ function Category() {
                     type="search"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="Search..."
+                    placeholder={t('common.search') + '...'}
                     aria-label="Search categories"
                     className="w-full pl-11 pr-10 py-2 rounded-lg border focus:outline-none focus:ring"
                   />
@@ -546,14 +548,14 @@ function Category() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span className="font-semibold text-base">Filter</span>
+                  <span className="font-semibold text-base">{t('common.filter')}</span>
                 </button>
 
                 {filterPanelOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white border rounded-md shadow-lg p-4 z-20">
                     <div className="mb-3">
                       <label className="block text-sm font-medium text-gray-700">
-                        Feature
+                        {t('product.featured')}
                       </label>
                       <select
                         value={filterFeatured}
@@ -562,15 +564,15 @@ function Category() {
                         }
                         className="mt-1 w-full border rounded px-2 py-1"
                       >
-                        <option value="all">All</option>
-                        <option value="1">Featured</option>
-                        <option value="0">Not Featured</option>
+                        <option value="all">{t('common.all')}</option>
+                        <option value="1">{t('common.featured')}</option>
+                        <option value="0">{t('common.notFeatured')}</option>
                       </select>
                     </div>
 
                     <div className="mb-3">
                       <label className="block text-sm font-medium text-gray-700">
-                        Deleted
+                        {t('common.deleted')}
                       </label>
                       <select
                         value={filterDeleted}
@@ -579,9 +581,9 @@ function Category() {
                         }
                         className="mt-1 w-full border rounded px-2 py-1"
                       >
-                        <option value="all">All</option>
-                        <option value="1">Deleted</option>
-                        <option value="0">Not Deleted</option>
+                        <option value="all">{t('common.all')}</option>
+                        <option value="1">{t('common.deleted')}</option>
+                        <option value="0">{t('common.active')}</option>
                       </select>
                     </div>
 
@@ -594,7 +596,7 @@ function Category() {
                         }}
                         className="px-4 py-2 bg-indigo-600 text-white rounded"
                       >
-                        Apply
+                        {t('common.apply')}
                       </Button>
                     </div>
                   </div>
@@ -607,7 +609,7 @@ function Category() {
                   <tr className="text-sm text-gray-500 border-b">
                     <th className="py-3 px-4">
                       <div className="inline-flex items-center gap-2">
-                        <span>Category</span>
+                        <span>{t('category.categoryName')}</span>
                         <div className="flex flex-col items-center text-gray-400">
                           <button
                             type="button"
@@ -660,24 +662,24 @@ function Category() {
                         </div>
                       </div>
                     </th>
-                    <th className="py-3 px-4">Description</th>
-                    <th className="py-3 px-4">Featured</th>
-                    <th className="py-3 px-4">Deleted</th>
-                    <th className="py-3 px-4">Created At</th>
-                    <th className="py-3 px-4">Actions</th>
+                    <th className="py-3 px-4">{t('category.categoryDescription')}</th>
+                    <th className="py-3 px-4">{t('product.featured')}</th>
+                    <th className="py-3 px-4">{t('common.deleted')}</th>
+                    <th className="py-3 px-4">{t('common.createdAt')}</th>
+                    <th className="py-3 px-4">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
                       <td colSpan={5} className="p-6 text-center">
-                        Loading...
+                        {t('common.loading')}
                       </td>
                     </tr>
                   ) : items.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="p-6 text-center text-gray-500">
-                        No categories found
+                        {t('category.noCategories')}
                       </td>
                     </tr>
                   ) : (
@@ -711,7 +713,7 @@ function Category() {
                                   : "text-gray-500"
                               }`}
                             >
-                              {c.isFeatured === "1" ? "Yes" : "No"}
+                              {c.isFeatured === "1" ? t('common.yes') : t('common.no')}
                             </span>
                           </div>
                         </td>
@@ -734,7 +736,7 @@ function Category() {
                                   : "text-red-600"
                               }`}
                             >
-                              {c.isDeleted === "0" ? "Active" : "Deleted"}
+                              {c.isDeleted === "0" ? t('common.active') : t('common.deleted')}
                             </span>
                           </div>
                         </td>
@@ -757,7 +759,7 @@ function Category() {
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
-                            Edit
+                            {t('common.edit')}
                           </button>
                         </td>
                       </tr>
@@ -770,7 +772,7 @@ function Category() {
 
           <div className="p-4 border-t flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {items.length} of {totalElements} categories
+              {t('common.showing')} {items.length} {t('common.of')} {totalElements} {t('category.categories')}
             </div>
 
             <div className="flex items-center gap-3 ml-auto">
@@ -865,15 +867,15 @@ function Category() {
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Category
+              {t('category.editCategory')}
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update category information.
+              {t('category.updateInfo')}
             </p>
           </div>
           {editError && (
             <div className="px-2 mb-4">
-              <Alert variant="error" title="Error" message={editError} />
+              <Alert variant="error" title={t('common.error')} message={editError} />
             </div>
           )}
           <form
@@ -886,22 +888,22 @@ function Category() {
             <div className="custom-scrollbar max-h-[450px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div className="col-span-2 lg:col-span-2">
-                  <Label>Name</Label>
+                  <Label>{t('category.categoryName')}</Label>
                   <Input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Category name"
+                    placeholder={t('category.categoryName')}
                   />
                 </div>
 
                 <div className="col-span-2 lg:col-span-2">
-                  <Label>Description</Label>
+                  <Label>{t('category.categoryDescription')}</Label>
                   <Input
                     type="text"
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
-                    placeholder="Description"
+                    placeholder={t('category.categoryDescription')}
                   />
                 </div>
               </div>
@@ -913,10 +915,10 @@ function Category() {
                 type="button"
                 onClick={closeEditModal}
               >
-                Close
+                {t('common.close')}
               </Button>
               <Button size="sm" type="submit" disabled={editLoading}>
-                {editLoading ? "Saving..." : "Save Changes"}
+                {editLoading ? t('common.saving') : t('common.saveChanges')}
               </Button>
             </div>
           </form>

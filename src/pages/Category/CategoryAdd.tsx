@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
 import categoryApi from "../../services/api/categoryApi";
 
 export default function CategoryAdd() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -27,16 +29,16 @@ export default function CategoryAdd() {
       const res = await categoryApi.create(payload);
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
-        setMessage("Create category successfully");
+        setMessage(t('category.createSuccess'));
         // Tự động quay lại trang list sau 1 giây
         setTimeout(() => {
           navigate("/category");
         }, 1000);
       } else {
-        setError(data?.message || "Unknown response");
+        setError(data?.message || t('category.unknownResponse'));
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to create category");
+      setError(err?.message || t('category.createError'));
     } finally {
       setLoading(false);
     }
@@ -44,46 +46,46 @@ export default function CategoryAdd() {
 
   return (
     <>
-      <PageMeta title="Add Category" description="Create a new category" />
+      <PageMeta title={t('category.addCategory')} description={t('category.createNew')} />
       <div className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Add Category</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('category.addCategory')}</h2>
 
         <form onSubmit={submit} className="bg-white border rounded-lg p-6">
           {error && (
             <div className="mb-3">
-              <Alert variant="error" title="Error" message={error} />
+              <Alert variant="error" title={t('common.error')} message={error} />
             </div>
           )}
           {message && (
             <div className="mb-3">
-              <Alert variant="success" title="Success" message={message} />
+              <Alert variant="success" title={t('common.success')} message={message} />
             </div>
           )}
 
           <div className="mt-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Category Name
+                {t('category.categoryName')}
               </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full border rounded px-3 py-2"
-                placeholder="Enter category name"
+                placeholder={t('category.enterCategoryName')}
               />
             </div>
           </div>
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Description
+              {t('category.categoryDescription')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
-              placeholder="Description"
+              placeholder={t('category.categoryDescription')}
             />
           </div>
 
@@ -99,7 +101,7 @@ export default function CategoryAdd() {
               htmlFor="isFeatured"
               className="text-sm text-gray-700 cursor-pointer"
             >
-              Featured Category
+              {t('category.featuredCategory')}
             </label>
           </div>
 
@@ -110,7 +112,7 @@ export default function CategoryAdd() {
               disabled={loading}
               className="bg-indigo-600"
             >
-              {loading ? "Saving..." : "Save"}
+              {loading ? t('common.saving') : t('common.save')}
             </Button>
             <Button
               size="md"
@@ -118,7 +120,7 @@ export default function CategoryAdd() {
               type="button"
               onClick={() => navigate("/category")}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           </div>
         </form>

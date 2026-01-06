@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
@@ -8,6 +9,7 @@ import Select from "../../components/form/Select";
 import ImageUploadDropzone from "../../components/Product/ImageUploadDropzone";
 
 export default function PetAdd() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Pet Info
@@ -247,13 +249,13 @@ export default function PetAdd() {
   return (
     <>
       <PageMeta
-        title="Add New Pet | Pet Shop CMS"
-        description="Add a new pet to the store"
+        title={t('pet.addPet')}
+        description={t('pet.addPet')}
       />
       <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-title-md2 font-semibold text-black dark:text-white">
-            Add New Pet
+            {t('pet.addPet')}
           </h2>
           <nav>
             <ol className="flex items-center gap-2">
@@ -273,7 +275,7 @@ export default function PetAdd() {
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
                 <h3 className="font-medium text-black dark:text-white">
-                  Pet Information
+                  {t('pet.petInformation')}
                 </h3>
               </div>
               <div className="p-6.5">
@@ -295,11 +297,11 @@ export default function PetAdd() {
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Pet Name <span className="text-meta-1">*</span>
+                      {t('pet.name')} <span className="text-meta-1">*</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Enter pet name"
+                      placeholder={t('pet.enterPetName')}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
@@ -308,13 +310,13 @@ export default function PetAdd() {
 
                   <div className="w-full xl:w-1/2">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Animal Type <span className="text-meta-1">*</span>
+                      {t('pet.animal')} <span className="text-meta-1">*</span>
                     </label>
                     <Select
                       options={animalOptions}
                       value={animal}
                       onChange={(val) => setAnimal(val)}
-                      placeholder="Select animal"
+                      placeholder={t('pet.selectAnimal')}
                       required
                     />
                   </div>
@@ -323,11 +325,11 @@ export default function PetAdd() {
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Breed <span className="text-meta-1">*</span>
+                      {t('pet.breed')} <span className="text-meta-1">*</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Enter breed"
+                      placeholder={t('pet.enterBreed')}
                       value={breed}
                       onChange={(e) => setBreed(e.target.value)}
                       className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
@@ -336,11 +338,11 @@ export default function PetAdd() {
 
                   <div className="w-full xl:w-1/2">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Age <span className="text-meta-1">*</span>
+                      {t('pet.age')} <span className="text-meta-1">*</span>
                     </label>
                     <input
                       type="number"
-                      placeholder="Enter age"
+                      placeholder={t('pet.enterAge')}
                       value={age}
                       onChange={handleAgeChange}
                       className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
@@ -351,25 +353,25 @@ export default function PetAdd() {
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/3">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Age Group <span className="text-meta-1">*</span>
+                      {t('pet.ageGroup')} <span className="text-meta-1">*</span>
                     </label>
                     <Select
                       options={ageGroupOptions}
                       value={ageGroup}
                       onChange={(val) => setAgeGroup(val)}
-                      placeholder="Select Age Group"
+                      placeholder={t('pet.selectAgeGroup')}
                       required
                     />
                   </div>
                   <div className="w-full xl:w-1/3">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Weight (kg) <span className="text-meta-1">*</span>
+                      {t('pet.weight')} <span className="text-meta-1">*</span>
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Enter weight"
+                      placeholder={t('pet.enterWeight')}
                       value={weight}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -382,13 +384,13 @@ export default function PetAdd() {
                   </div>
                   <div className="w-full xl:w-1/3">
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Gender <span className="text-meta-1">*</span>
+                      {t('pet.gender')} <span className="text-meta-1">*</span>
                     </label>
                     <Select
                       options={genderOptions}
                       value={gender}
                       onChange={(val) => setGender(val)}
-                      placeholder="Select Gender"
+                      placeholder={t('pet.selectGender')}
                       required
                     />
                   </div>
@@ -396,11 +398,11 @@ export default function PetAdd() {
 
                 <div className="mb-6">
                   <label className="mb-2.5 block text-black dark:text-white">
-                    Description
+                    {t('common.description')}
                   </label>
                   <textarea
                     rows={4}
-                    placeholder="Detailed description..."
+                    placeholder={t('pet.detailedDescription')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
@@ -410,13 +412,13 @@ export default function PetAdd() {
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
                       <label className="mb-2.5 block text-black dark:text-white">
-                        Health Status
+                        {t('pet.healthStatus')}
                       </label>
                       <Select
                         options={healthStatusOptions}
                         value={healthStatus}
                         onChange={(val) => setHealthStatus(val)}
-                        placeholder="Select health status"
+                        placeholder={t('pet.selectHealthStatus')}
                       />
                     </div>
                 </div>
@@ -434,7 +436,7 @@ export default function PetAdd() {
                       htmlFor="vaccinated"
                       className="text-black dark:text-white"
                     >
-                      Vaccinated
+                      {t('pet.vaccinated')}
                     </label>
                   </div>
                   <div className="flex items-center gap-3">
@@ -449,7 +451,7 @@ export default function PetAdd() {
                       htmlFor="neutered"
                       className="text-black dark:text-white"
                     >
-                      Neutered
+                      {t('pet.neutered')}
                     </label>
                   </div>
                 </div>
@@ -457,7 +459,7 @@ export default function PetAdd() {
                 {/* Image Upload */}
                 <div className="mb-6">
                   <label className="mb-2.5 block text-black dark:text-white">
-                    Upload Pet Images <span className="text-meta-1">*</span>
+                    {t('product.uploadProductImages')} <span className="text-meta-1">*</span>
                   </label>
                   <ImageUploadDropzone
                     onImagesDrop={handleImageUpload}
@@ -518,14 +520,14 @@ export default function PetAdd() {
                     onClick={() => navigate("/pet/list")}
                     disabled={loading}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     variant="primary"
                     onClick={handleSubmit}
                     disabled={!isFormValid || loading || uploadingImages}
                   >
-                    {loading ? "Creating..." : "Create Pet"}
+                    {loading ? t('pet.creating') : t('pet.createPet')}
                   </Button>
                 </div>
               </div>

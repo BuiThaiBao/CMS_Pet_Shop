@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import petApi from "../../services/api/petApi";
 import Select from "../../components/form/Select";
@@ -9,6 +10,7 @@ import Alert from "../../components/ui/alert/Alert";
 
 
 export default function PetList() {
+  const { t } = useTranslation();
   const [pets, setPets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
@@ -35,7 +37,7 @@ export default function PetList() {
 
   // Animal options lấy từ API
   const [animalOptions, setAnimalOptions] = useState([
-    { value: "", label: "All Animals" }
+    { value: "", label: t('pet.allAnimals') }
   ]);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function PetList() {
         // Giả sử trả về mảng string tên animal
         const arr = res.data?.result || [];
         setAnimalOptions([
-          { value: "", label: "All Animals" },
+          { value: "", label: t('pet.allAnimals') },
           ...arr.map((a: string) => ({ value: a, label: a }))
         ]);
       } catch (e) {
@@ -56,23 +58,23 @@ export default function PetList() {
     fetchAnimals();
   }, []);
   const sizeOptions = [
-    { value: "", label: "All Sizes" },
-    { value: "Small", label: "Small" },
-    { value: "Medium", label: "Medium" },
-    { value: "Big", label: "Big" },
+    { value: "", label: t('pet.allSizes') },
+    { value: "Small", label: t('pet.small') },
+    { value: "Medium", label: t('pet.medium') },
+    { value: "Big", label: t('pet.big') },
   ];
   const ageGroupOptions = [
-    { value: "", label: "All Age Groups" },
-    { value: "Young", label: "Young (< 1 year)" },
-    { value: "Child", label: "Child (1-3 years)" },
-    { value: "Adult", label: "Adult (3-7 years)" },
-    { value: "Senior", label: "Senior (> 7 years)" },
+    { value: "", label: t('pet.allAgeGroups') },
+    { value: "Young", label: t('pet.young') },
+    { value: "Child", label: t('pet.child') },
+    { value: "Adult", label: t('pet.adult') },
+    { value: "Senior", label: t('pet.senior') },
   ];
   const statusOptions = [
-    { value: "", label: "All Statuses" },
-    { value: "AVAILABLE", label: "Available" },
-    { value: "ADOPTED", label: "Adopted" },
-    { value: "PENDING_APPROVAL", label: "Pending" },
+    { value: "", label: t('pet.allStatuses') },
+    { value: "AVAILABLE", label: t('pet.available') },
+    { value: "ADOPTED", label: t('pet.adopted') },
+    { value: "PENDING_APPROVAL", label: t('pet.pending') },
 
   ];
 
@@ -276,7 +278,7 @@ export default function PetList() {
 
   return (
     <>
-      <PageMeta title="Pet List | Pet Shop CMS" description="List of all pets" />
+      <PageMeta title={t('pet.petList')} description={t('pet.listOfAllPets')} />
       <div className="p-4">
         {toast && (
           <div className="fixed right-4 top-24 z-[9999] w-96">
@@ -285,47 +287,47 @@ export default function PetList() {
         )}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Pet List</h1>
-            <p className="mt-2 text-sm text-gray-600">Manage pets</p>
+            <h1 className="text-xl font-semibold">{t('pet.petList')}</h1>
+            <p className="mt-2 text-sm text-gray-600">{t('pet.managePets')}</p>
           </div>
         </div>
         <div className="mt-4 bg-white rounded-lg border">
           <div className="p-4">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <Select options={animalOptions} value={animal} onChange={setAnimal} placeholder="All Animals" />
-                <Select options={sizeOptions} value={size} onChange={setSize} placeholder="All Sizes" />
-                <Select options={ageGroupOptions} value={ageGroup} onChange={setAgeGroup} placeholder="All Age Groups" />
-                <Select options={statusOptions} value={status} onChange={setStatus} placeholder="All Statuses" />
+                <Select options={animalOptions} value={animal} onChange={setAnimal} placeholder={t('pet.allAnimals')} />
+                <Select options={sizeOptions} value={size} onChange={setSize} placeholder={t('pet.allSizes')} />
+                <Select options={ageGroupOptions} value={ageGroup} onChange={setAgeGroup} placeholder={t('pet.allAgeGroups')} />
+                <Select options={statusOptions} value={status} onChange={setStatus} placeholder={t('pet.allStatuses')} />
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-sm text-gray-500 border-b">
-                    <th className="py-3 px-4">Name</th>
-                    <th className="py-3 px-4">Animal</th>
-                    <th className="py-3 px-4">Breed</th>
-                    <th className="py-3 px-4">Age</th>
-                    <th className="py-3 px-4">Gender</th>
-                    <th className="py-3 px-4">Weight</th>
-                    <th className="py-3 px-4">Age Group</th>
-                    <th className="py-3 px-4">Health Status</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Deleted</th>
-                    <th className="py-3 px-4">Created At</th>
-                    <th className="py-3 px-4">Updated At</th>
-                    <th className="py-3 px-4">Actions</th>
+                    <th className="py-3 px-4">{t('pet.name')}</th>
+                    <th className="py-3 px-4">{t('pet.animal')}</th>
+                    <th className="py-3 px-4">{t('pet.breed')}</th>
+                    <th className="py-3 px-4">{t('pet.age')}</th>
+                    <th className="py-3 px-4">{t('pet.gender')}</th>
+                    <th className="py-3 px-4">{t('pet.weight')}</th>
+                    <th className="py-3 px-4">{t('pet.ageGroup')}</th>
+                    <th className="py-3 px-4">{t('pet.healthStatus')}</th>
+                    <th className="py-3 px-4">{t('common.status')}</th>
+                    <th className="py-3 px-4">{t('common.deleted')}</th>
+                    <th className="py-3 px-4">{t('common.createdAt')}</th>
+                    <th className="py-3 px-4">{t('common.updatedAt')}</th>
+                    <th className="py-3 px-4">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={12} className="p-6 text-center">Loading...</td>
+                      <td colSpan={12} className="p-6 text-center">{t('common.loading')}</td>
                     </tr>
                   ) : pets.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="p-6 text-center text-gray-500">No pets found</td>
+                      <td colSpan={12} className="p-6 text-center text-gray-500">{t('pet.noPets')}</td>
                     </tr>
                   ) : (
                     pets.map((pet, key) => {
@@ -365,7 +367,7 @@ export default function PetList() {
                                   : "text-red-600"
                               }`}
                             >
-                              {pet.isDeleted === "0" ? "Active" : "Deleted"}
+                              {pet.isDeleted === "0" ? t('common.active') : t('common.deleted')}
                             </span>
                           </div>
                         </td>
@@ -385,7 +387,7 @@ export default function PetList() {
                               title="Edit pet information"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                              Edit
+                              {t('common.edit')}
                             </button>
                             <button
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
@@ -393,7 +395,7 @@ export default function PetList() {
                               title="View details"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                              Details
+                              {t('common.details')}
                             </button>
                           </div>
                         </td>
@@ -407,7 +409,7 @@ export default function PetList() {
           </div>
           <div className="p-4 border-t flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {pets.length} of {totalElements} pets
+              {t('common.showing')} {pets.length} {t('common.of')} {totalElements} {t('pet.pets')}
             </div>
             <div className="flex items-center gap-3 ml-auto">
               <div className="flex items-center gap-3">

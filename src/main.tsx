@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "swiper/swiper-bundle.css";
 import "flatpickr/dist/flatpickr.css";
+import "./i18n/config"; // Initialize i18n
 import App from "./App.tsx";
 import { authService } from "./services/authService";
 import { AppWrapper } from "./components/common/PageMeta.tsx";

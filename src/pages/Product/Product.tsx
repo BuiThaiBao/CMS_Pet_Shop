@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
@@ -27,6 +28,7 @@ export type ProductItem = {
 };
 
 export default function Product() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState<ProductItem[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -138,7 +140,7 @@ export default function Product() {
       const code = err?.code as string | undefined;
       if (code === "ERR_CANCELED" || err?.name === "CanceledError") return;
       console.error(err);
-      setError(err?.message || "Failed to fetch products");
+      setError(err?.message || t('messages.loadError'));
     } finally {
       setLoading(false);
       abortRef.current = null;
@@ -203,7 +205,7 @@ export default function Product() {
       await productApi.update(id, payload);
     } catch (err: any) {
       setItems(prevItems);
-      setError(err?.message || "Failed to update product");
+      setError(err?.message || t('messages.updateError'));
     } finally {
       const after = new Set(updatingIds);
       after.delete(id);
@@ -238,18 +240,18 @@ export default function Product() {
 
   return (
     <>
-      <PageMeta title="Product" description="Product list" />
+      <PageMeta title={t('product.title')} description={t('product.productList')} />
       <div className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Product List</h1>
-            <p className="mt-2 text-sm text-gray-600">Manage products</p>
+            <h1 className="text-xl font-semibold">{t('product.productList')}</h1>
+            <p className="mt-2 text-sm text-gray-600">{t('product.manageProducts')}</p>
           </div>
         </div>
         <div className="mt-4 bg-white rounded-lg border">
           {error && (
             <div className="p-4">
-              <Alert variant="error" title="Error" message={error} />
+              <Alert variant="error" title={t('common.error')} message={error} />
             </div>
           )}
           <div className="p-4">
@@ -257,7 +259,7 @@ export default function Product() {
               <div className="flex items-center gap-4">
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
-                    Search Products
+                    {t('product.searchProducts')}
                   </label>
                   <div className="relative w-80">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -276,7 +278,7 @@ export default function Product() {
                       type="search"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder="Search..."
+                      placeholder={t('common.search')}
                       aria-label="Search products"
                       className="w-full pl-11 pr-10 py-2 rounded-lg border focus:outline-none focus:ring"
                     />
@@ -307,18 +309,18 @@ export default function Product() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
-                    Filter by Category
+                    {t('product.filterByCategory')}
                   </label>
                   <div className="w-64">
                     <Select
                       options={[
-                        { value: "", label: "All Categories" },
+                        { value: "", label: t('product.allCategories') },
                         ...categories.map((cat) => ({
                           value: String(cat.id),
                           label: cat.name,
                         })),
                       ]}
-                      placeholder="Select category"
+                      placeholder={t('product.selectCategory')}
                       defaultValue={selectedCategoryId}
                       onChange={(value) => {
                         setSelectedCategoryId(value);
@@ -339,7 +341,7 @@ export default function Product() {
                   <tr className="text-sm text-gray-500 border-b">
                     <th className="py-3 px-4">
                       <div className="inline-flex items-center gap-2">
-                        <span>Product</span>
+                        <span>{t('product.productName')}</span>
                         <div className="flex flex-col items-center text-gray-400">
                           <button
                             type="button"
@@ -392,22 +394,22 @@ export default function Product() {
                         </div>
                       </div>
                     </th>
-                    <th className="py-3 px-4">Short Description</th>
+                    <th className="py-3 px-4">{t('product.shortDescription')}</th>
 
-                    <th className="py-3 px-4">Sold</th>
-                    <th className="py-3 px-4">Stock</th>
-                    <th className="py-3 px-4">Featured</th>
-                    <th className="py-3 px-4">Deleted</th>
-                    <th className="py-3 px-4">Created At</th>
-                    <th className="py-3 px-4">Updated At</th>
-                    <th className="py-3 px-4">Actions</th>
+                    <th className="py-3 px-4">{t('product.sold')}</th>
+                    <th className="py-3 px-4">{t('product.stock')}</th>
+                    <th className="py-3 px-4">{t('product.featured')}</th>
+                    <th className="py-3 px-4">{t('common.deleted')}</th>
+                    <th className="py-3 px-4">{t('common.createdAt')}</th>
+                    <th className="py-3 px-4">{t('common.updatedAt')}</th>
+                    <th className="py-3 px-4">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
                       <td colSpan={10} className="p-6 text-center">
-                        Loading...
+                        {t('common.loading')}
                       </td>
                     </tr>
                   ) : items.length === 0 ? (
@@ -416,7 +418,7 @@ export default function Product() {
                         colSpan={10}
                         className="p-6 text-center text-gray-500"
                       >
-                        No products found
+                        {t('product.noProducts')}
                       </td>
                     </tr>
                   ) : (
@@ -427,7 +429,7 @@ export default function Product() {
                           <div className="text-xs text-gray-400">
                             ID: {p.id}{" "}
                             {p.categoryName
-                              ? `• Category: ${p.categoryName}`
+                              ? `• ${t('product.category')}: ${p.categoryName}`
                               : ""}
                           </div>
                         </td>
@@ -459,7 +461,7 @@ export default function Product() {
                                   : "text-gray-500"
                               }`}
                             >
-                              {p.isFeatured === "1" ? "Yes" : "No"}
+                              {p.isFeatured === "1" ? t('common.yes') : t('common.no')}
                             </span>
                           </div>
                         </td>
@@ -482,7 +484,7 @@ export default function Product() {
                                   : "text-red-600"
                               }`}
                             >
-                              {p.isDeleted === "0" ? "Active" : "Deleted"}
+                              {p.isDeleted === "0" ? t('common.active') : t('common.deleted')}
                             </span>
                           </div>
                         </td>
@@ -510,7 +512,7 @@ export default function Product() {
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
-                              Edit
+                              {t('common.edit')}
                             </button>
                             <button
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
@@ -528,7 +530,7 @@ export default function Product() {
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
                               </svg>
-                              Details
+                              {t('common.details')}
                             </button>
                           </div>
                         </td>
@@ -541,7 +543,7 @@ export default function Product() {
           </div>
           <div className="p-4 border-t flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {items.length} of {totalElements} products
+              {t('common.showing')} {items.length} {t('common.of')} {totalElements} {t('product.products')}
             </div>
             <div className="flex items-center gap-3 ml-auto">
               <div className="flex items-center gap-3">

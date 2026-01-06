@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { useTranslation } from "react-i18next";
 
 interface ImageUploadDropzoneProps {
   onImagesDrop: (files: File[]) => Promise<void>;
@@ -10,6 +11,8 @@ export default function ImageUploadDropzone({
   onImagesDrop,
   isLoading = false,
 }: ImageUploadDropzoneProps) {
+  const { t } = useTranslation();
+
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
@@ -53,20 +56,20 @@ export default function ImageUploadDropzone({
         </svg>
         {isLoading ? (
           <div>
-            <p className="text-sm font-medium text-gray-600">Uploading...</p>
+            <p className="text-sm font-medium text-gray-600">{t('common.uploading')}</p>
             <div className="mt-2 w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : isDragActive ? (
           <p className="text-sm font-medium text-indigo-600">
-            Drop images here...
+            {t('common.dropImagesHere')}
           </p>
         ) : (
           <div>
             <p className="text-sm font-medium text-gray-600">
-              Drag & drop images here, or click to select
+              {t('common.dragDropOrClick')}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Supported formats: JPG, PNG, GIF, WebP
+              {t('common.supportedFormats')}
             </p>
           </div>
         )}

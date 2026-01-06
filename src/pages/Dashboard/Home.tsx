@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
 import OrderStatusChart from "../../components/ecommerce/OrderStatusChart";
@@ -7,11 +8,12 @@ import TopCustomersTable from "../../components/ecommerce/TopCustomersTable";
 import PageMeta from "../../components/common/PageMeta";
 
 export default function Home() {
+  const { t } = useTranslation();
   return (
     <>
       <PageMeta
-        title="Admin Dashboard | PetShop CMS"
-        description="Quản lý và thống kê doanh thu, đơn hàng, khách hàng, sản phẩm"
+        title={t('dashboard.title')}
+        description={t('dashboard.description')}
       />
       
       <div className="space-y-6">
