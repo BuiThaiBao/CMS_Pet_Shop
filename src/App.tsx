@@ -12,6 +12,7 @@ import UserProfiles from "./pages/User/UserProfiles";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/ServiceCalendar/Calendar";
+import AppointmentList from "./pages/ServiceCalendar/AppointmentList";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
@@ -55,6 +56,7 @@ export default function App() {
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/appointments" element={<AppointmentList />} />
             <Route path="/category" element={<Category />} />
             <Route path="/category/add" element={<CategoryAdd />} />
             <Route path="/category/edit/:id" element={<CategoryEdit />} />

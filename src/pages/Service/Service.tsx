@@ -248,17 +248,23 @@ function Service() {
         startTime: newTimeSlot.startTime,
         maxCapacity: Number(newTimeSlot.maxCapacity),
       });
-      
+
       // Reset form
       setNewTimeSlot({ startTime: "", maxCapacity: "" });
       setShowAddTimeForm(null);
-      
+
       // Reload services to get updated data from server
       await fetchServices(pageNumber, pageSize, query);
     } catch (err: any) {
       // Revert on error
       setItems(prevItems);
-      setError(err?.message || "Failed to add time slot");
+      // Extract error message from API response
+      const errorMessage = err?.response?.data?.message || err?.message || "Failed to add time slot";
+      setError(errorMessage);
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     } finally {
       setAddingTimeSlot(null);
     }
@@ -419,7 +425,7 @@ function Service() {
                         <td className="py-4 px-4 text-sm text-gray-600">
                           {s.description
                             ? s.description.substring(0, 50) +
-                              (s.description.length > 50 ? "..." : "")
+                            (s.description.length > 50 ? "..." : "")
                             : "-"}
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
@@ -442,11 +448,10 @@ function Service() {
                                 </span>
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
-                                  className={`h-4 w-4 transition-transform ${
-                                    openDropdownId === s.id
-                                      ? "rotate-180"
-                                      : ""
-                                  }`}
+                                  className={`h-4 w-4 transition-transform ${openDropdownId === s.id
+                                    ? "rotate-180"
+                                    : ""
+                                    }`}
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -492,18 +497,36 @@ function Service() {
                                               Start Time
                                             </label>
                                             <input
-                                              type="time"
+                                              type="text"
                                               value={newTimeSlot.startTime}
-                                              onChange={(e) =>
-                                                setNewTimeSlot({
-                                                  ...newTimeSlot,
-                                                  startTime: e.target.value,
-                                                })
-                                              }
+                                              onChange={(e) => {
+                                                // Only allow HH:mm format
+                                                const value = e.target.value;
+                                                if (value === '' || /^([0-1]?[0-9]|2[0-3])?(:[0-5]?[0-9]?)?$/.test(value)) {
+                                                  setNewTimeSlot({
+                                                    ...newTimeSlot,
+                                                    startTime: value,
+                                                  });
+                                                }
+                                              }}
+                                              onBlur={(e) => {
+                                                // Format on blur (e.g., "9:0" -> "09:00")
+                                                const value = e.target.value;
+                                                const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+                                                if (match) {
+                                                  const hours = match[1].padStart(2, '0');
+                                                  const mins = match[2].padStart(2, '0');
+                                                  setNewTimeSlot({
+                                                    ...newTimeSlot,
+                                                    startTime: `${hours}:${mins}`,
+                                                  });
+                                                }
+                                              }}
                                               className="w-full border rounded px-2 py-1.5 text-sm"
-                                              step="60"
+                                              placeholder="HH:mm (VD: 09:00, 14:00)"
+                                              pattern="([0-1]?[0-9]|2[0-3]):[0-5][0-9]"
                                               aria-label="Start Time"
-                                              title="Start Time"
+                                              title="Start Time - Nhập theo định dạng 24 giờ (VD: 09:00, 14:00)"
                                               disabled={addingTimeSlot === s.id}
                                             />
                                           </div>
@@ -606,11 +629,10 @@ function Service() {
                                               color={isActive ? "green" : "red"}
                                             />
                                             <span
-                                              className={`text-xs font-medium min-w-[60px] ${
-                                                isActive
-                                                  ? "text-green-600"
-                                                  : "text-red-600"
-                                              }`}
+                                              className={`text-xs font-medium min-w-[60px] ${isActive
+                                                ? "text-green-600"
+                                                : "text-red-600"
+                                                }`}
                                             >
                                               {isActive ? "Active" : "Inactive"}
                                             </span>
@@ -643,11 +665,10 @@ function Service() {
                               color={s.isActive === "1" ? "green" : "red"}
                             />
                             <span
-                              className={`text-sm font-medium ${
-                                s.isActive === "1"
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                              }`}
+                              className={`text-sm font-medium ${s.isActive === "1"
+                                ? "text-green-600"
+                                : "text-red-600"
+                                }`}
                             >
                               {s.isActive === "1" ? "Active" : "Inactive"}
                             </span>
@@ -704,11 +725,10 @@ function Service() {
                   onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
                   disabled={pageNumber <= 1}
                   aria-label="Previous page"
-                  className={`w-9 h-9 flex items-center justify-center border rounded-lg ${
-                    pageNumber <= 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-50"
-                  }`}
+                  className={`w-9 h-9 flex items-center justify-center border rounded-lg ${pageNumber <= 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-50"
+                    }`}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -735,11 +755,10 @@ function Service() {
                         key={p}
                         onClick={() => setPageNumber(p)}
                         aria-current={active ? "page" : undefined}
-                        className={`transition-all ${
-                          active
-                            ? "w-9 h-9 flex items-center justify-center text-sm rounded-md bg-indigo-600 text-white shadow"
-                            : "px-2 text-sm text-gray-700"
-                        }`}
+                        className={`transition-all ${active
+                          ? "w-9 h-9 flex items-center justify-center text-sm rounded-md bg-indigo-600 text-white shadow"
+                          : "px-2 text-sm text-gray-700"
+                          }`}
                       >
                         {p}
                       </button>
@@ -755,11 +774,10 @@ function Service() {
                   }}
                   disabled={totalPages ? pageNumber >= totalPages : false}
                   aria-label="Next page"
-                  className={`w-9 h-9 flex items-center justify-center border rounded-lg ${
-                    totalPages && pageNumber >= totalPages
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-50"
-                  }`}
+                  className={`w-9 h-9 flex items-center justify-center border rounded-lg ${totalPages && pageNumber >= totalPages
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-50"
+                    }`}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
