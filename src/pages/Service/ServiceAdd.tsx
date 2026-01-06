@@ -68,10 +68,18 @@ export default function ServiceAdd() {
           navigate("/service");
         }, 1500);
       } else {
-        setError(data?.message || t('category.unknownResponse'));
+        setError(data?.message || "Unknown response");
+        // Auto-hide error after 5 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || t('service.createError'));
+      setError(err?.response?.data?.message || err?.message || "Failed to create service");
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     } finally {
       setLoading(false);
     }
@@ -238,17 +246,35 @@ export default function ServiceAdd() {
             {bookingTimes.map((slot, index) => (
               <div key={index} className="flex items-center gap-2 mb-2">
                 <input
-                  type="time"
+                  type="text"
                   value={slot.startTime}
                   onChange={(e) => {
-                    const newSlots = [...bookingTimes];
-                    newSlots[index].startTime = e.target.value;
-                    setBookingTimes(newSlots);
+                    // Only allow HH:mm format
+                    const value = e.target.value;
+                    if (value === '' || /^([0-1]?[0-9]|2[0-3])?(:[0-5]?[0-9]?)?$/.test(value)) {
+                      const newSlots = [...bookingTimes];
+                      newSlots[index].startTime = value;
+                      setBookingTimes(newSlots);
+                    }
                   }}
-                  className="border rounded px-3 py-2 w-32"
+                  onBlur={(e) => {
+                    // Format on blur (e.g., "9:0" -> "09:00")
+                    const value = e.target.value;
+                    const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+                    if (match) {
+                      const hours = match[1].padStart(2, '0');
+                      const mins = match[2].padStart(2, '0');
+                      const newSlots = [...bookingTimes];
+                      newSlots[index].startTime = `${hours}:${mins}`;
+                      setBookingTimes(newSlots);
+                    }
+                  }}
+                  className="border rounded px-3 py-2 w-36"
+                  placeholder="HH:mm (VD: 09:00)"
+                  pattern="([0-1]?[0-9]|2[0-3]):[0-5][0-9]"
                   required
                   aria-label="Start Time"
-                  title="Start Time"
+                  title="Start Time - Nhập theo định dạng 24 giờ (VD: 09:00, 14:00)"
                 />
                 <input
                   type="number"

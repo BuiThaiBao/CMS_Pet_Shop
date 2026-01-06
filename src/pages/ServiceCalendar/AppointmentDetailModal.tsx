@@ -58,6 +58,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // Services and booking times data
     const [services, setServices] = useState<ServicePetResponse[]>([]);
@@ -85,6 +86,18 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         console.log("Appointment time:", appointmentDateTime, "Now:", now, "isPast:", appointmentDateTime <= now);
         return appointmentDateTime <= now;
     })();
+
+    // Check if the appointment is for today
+    const isAppointmentToday = (() => {
+        if (!appointment) return false;
+        const appointmentDate = new Date(appointment.slotDate);
+        const today = new Date();
+        return appointmentDate.toDateString() === today.toDateString();
+    })();
+
+    // Status confirmation modal state
+    const [showStatusConfirmModal, setShowStatusConfirmModal] = useState(false);
+    const [pendingStatus, setPendingStatus] = useState<AppointmentStatus | null>(null);
 
     // Reset form when appointment changes or modal closes
     useEffect(() => {
@@ -274,6 +287,51 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         }
     };
 
+    // Handle quick status change from view mode
+    const handleStatusChange = async (newStatus: AppointmentStatus) => {
+        if (!appointment) return;
+
+        try {
+            setSaving(true);
+            const request: UpdateServiceAppointmentRequest = {
+                id: appointment.id,
+                namePet: appointment.namePet,
+                speciePet: appointment.speciePet,
+                status: newStatus,
+                notes: appointment.notes || undefined,
+            };
+
+            const response = await appointmentApi.update(request);
+
+            if (response.data.success) {
+                onUpdate?.();
+                onClose();
+            } else {
+                alert("Cập nhật thất bại: " + response.data.message);
+            }
+        } catch (error: any) {
+            console.error("Error updating status:", error);
+            alert("Cập nhật thất bại: " + (error.response?.data?.message || "Lỗi không xác định"));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // Open confirmation popup for status change
+    const openStatusConfirmation = (newStatus: AppointmentStatus) => {
+        setPendingStatus(newStatus);
+        setShowStatusConfirmModal(true);
+    };
+
+    // Handle confirmed status change
+    const handleConfirmStatusChange = () => {
+        if (pendingStatus) {
+            setShowStatusConfirmModal(false);
+            handleStatusChange(pendingStatus);
+            setPendingStatus(null);
+        }
+    };
+
     const handleClose = () => {
         setIsEditMode(false);
         onClose();
@@ -299,7 +357,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                             </div>
                         )}
                     </div>
-                    {!isEditMode && (
+                    {!isEditMode && appointment.status !== "CANCELED" && appointment.status !== "COMPLETED" && !isAppointmentPast && (
                         <button
                             onClick={handleEdit}
                             type="button"
@@ -334,8 +392,39 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                                     ))}
                                 </select>
                             ) : (
-                                <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium w-fit ${getStatusColorClass(appointment.status)}`}>
-                                    {getStatusLabel(appointment.status)}
+                                <div className="flex flex-col gap-2">
+                                    <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium w-fit ${getStatusColorClass(appointment.status)}`}>
+                                        {getStatusLabel(appointment.status)}
+                                    </div>
+                                    {/* Quick status change buttons for SCHEDULED appointments */}
+                                    {appointment.status === "SCHEDULED" && (
+                                        <div className="flex gap-2 mt-1">
+                                            {/* "Hoàn thành" button only shows for today's or past appointments */}
+                                            {(isAppointmentToday || isAppointmentPast) && (
+                                                <button
+                                                    onClick={() => openStatusConfirmation("COMPLETED")}
+                                                    disabled={saving}
+                                                    className="flex items-center justify-center gap-1 min-w-[100px] px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Hoàn thành
+                                                </button>
+                                            )}
+                                            {/* "Hủy lịch" button always shows for SCHEDULED appointments */}
+                                            <button
+                                                onClick={() => openStatusConfirmation("CANCELED")}
+                                                disabled={saving}
+                                                className="flex items-center justify-center gap-1 min-w-[100px] px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Hủy lịch
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -543,13 +632,17 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                                 Loài
                             </label>
                             {isEditMode ? (
-                                <input
-                                    type="text"
+                                <select
                                     value={speciePet}
                                     onChange={(e) => setSpeciePet(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                    placeholder="Nhập loài thú cưng"
-                                />
+                                >
+                                    <option value="">Chọn loài</option>
+                                    <option value="Chó">Chó</option>
+                                    <option value="Mèo">Mèo</option>
+                                    <option value="Chim">Chim</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
                             ) : (
                                 <span className="text-base text-gray-800 dark:text-white/90">
                                     {appointment.speciePet}
@@ -615,7 +708,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                                 Hủy
                             </button>
                             <button
-                                onClick={handleSave}
+                                onClick={() => setShowConfirmModal(true)}
                                 type="button"
                                 disabled={saving || !namePet || !speciePet}
                                 className="flex justify-center items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -640,6 +733,110 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                Xác nhận lưu
+                            </h3>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            Bạn có chắc chắn muốn lưu các thay đổi cho lịch hẹn này không?
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                type="button"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowConfirmModal(false);
+                                    handleSave();
+                                }}
+                                type="button"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {saving && (
+                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                )}
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Status Change Confirmation Modal */}
+            {showStatusConfirmModal && pendingStatus && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${pendingStatus === "COMPLETED" ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}>
+                                {pendingStatus === "COMPLETED" ? (
+                                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                )}
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                {pendingStatus === "COMPLETED" ? "Xác nhận hoàn thành" : "Xác nhận hủy lịch"}
+                            </h3>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            {pendingStatus === "COMPLETED"
+                                ? "Bạn có chắc chắn muốn đánh dấu lịch hẹn này là đã hoàn thành?"
+                                : "Bạn có chắc chắn muốn hủy lịch hẹn này?"}
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowStatusConfirmModal(false);
+                                    setPendingStatus(null);
+                                }}
+                                type="button"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                            >
+                                Hủy bỏ
+                            </button>
+                            <button
+                                onClick={handleConfirmStatusChange}
+                                type="button"
+                                disabled={saving}
+                                className={`px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center gap-2 ${pendingStatus === "COMPLETED" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                            >
+                                {saving && (
+                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                )}
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Modal >
     );
 };

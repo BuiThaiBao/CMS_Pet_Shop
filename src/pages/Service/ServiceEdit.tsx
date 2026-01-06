@@ -169,7 +169,7 @@ export default function ServiceEdit() {
     setMessage(null);
     try {
       const bookingTimeUpdates = buildBookingTimeUpdates();
-      
+
       const payload = {
         name,
         title,
@@ -186,9 +186,17 @@ export default function ServiceEdit() {
         setTimeout(() => navigate("/service"), 1500);
       } else {
         setError(data?.message || "Unknown response");
+        // Auto-hide error after 5 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to update service");
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     } finally {
       setLoading(false);
     }
@@ -338,18 +346,36 @@ export default function ServiceEdit() {
                         Giờ mới (HH:mm)
                       </label>
                       <input
-                        type="time"
+                        type="text"
                         value={edit.newTime}
-                        onChange={(e) =>
-                          updateTimeTemplateEdit(
-                            index,
-                            "newTime",
-                            e.target.value
-                          )
-                        }
+                        onChange={(e) => {
+                          // Only allow HH:mm format
+                          const value = e.target.value;
+                          if (value === '' || /^([0-1]?[0-9]|2[0-3])?(:[0-5]?[0-9]?)?$/.test(value)) {
+                            updateTimeTemplateEdit(
+                              index,
+                              "newTime",
+                              value
+                            );
+                          }
+                        }}
+                        onBlur={(e) => {
+                          // Format on blur (e.g., "9:0" -> "09:00")
+                          const value = e.target.value;
+                          const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+                          if (match) {
+                            const hours = match[1].padStart(2, '0');
+                            const mins = match[2].padStart(2, '0');
+                            updateTimeTemplateEdit(
+                              index,
+                              "newTime",
+                              `${hours}:${mins}`
+                            );
+                          }
+                        }}
                         className="w-full border rounded px-3 py-2"
-                        placeholder="08:00"
-                        step="60"
+                        placeholder="HH:mm (VD: 09:00, 14:00)"
+                        pattern="([0-1]?[0-9]|2[0-3]):[0-5][0-9]"
                       />
                     </div>
                     <div className="flex-1">

@@ -61,6 +61,30 @@ export interface ApiResponse<T> {
     result: T;
 }
 
+// Request type for filtering appointments
+export interface FilterAppointmentRequest {
+    status?: string;      // SCHEDULED, COMPLETED, CANCELED
+    email?: string;       // Search by email
+    serviceId?: number;   // Filter by service
+    fromDate?: string;    // Format: yyyy-MM-dd
+    toDate?: string;      // Format: yyyy-MM-dd
+}
+
+// Response type for appointment statistics
+export interface AppointmentStatisticsResponse {
+    todayCount: number;
+    scheduledCount: number;
+    completedCount: number;
+    totalCount: number;
+}
+
+// Statistics API response wrapper
+export interface StatisticsApiResponse {
+    success: boolean;
+    message: string;
+    result: AppointmentStatisticsResponse;
+}
+
 const appointmentApi = {
     /**
      * Get all appointments (for SHOP role)
@@ -115,6 +139,35 @@ const appointmentApi = {
             `/appointments/admin-email`,
             request
         );
+    },
+
+    /**
+     * Filter appointments with pagination
+     * @param params Filter parameters
+     * @param page Page number (0-indexed)
+     * @param size Number of items per page
+     */
+    filter: (params: FilterAppointmentRequest, page: number = 0, size: number = 10) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append("page", page.toString());
+        queryParams.append("size", size.toString());
+
+        if (params.status) queryParams.append("status", params.status);
+        if (params.email) queryParams.append("email", params.email);
+        if (params.serviceId) queryParams.append("serviceId", params.serviceId.toString());
+        if (params.fromDate) queryParams.append("fromDate", params.fromDate);
+        if (params.toDate) queryParams.append("toDate", params.toDate);
+
+        return http.get<AppointmentListResponse>(
+            `/appointments/filter?${queryParams.toString()}`
+        );
+    },
+
+    /**
+     * Get appointment statistics
+     */
+    getStatistics: () => {
+        return http.get<StatisticsApiResponse>(`/appointments/statistics`);
     },
 };
 

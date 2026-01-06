@@ -36,6 +36,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // Refs
     const datePickerRef = useRef<HTMLInputElement>(null);
@@ -281,7 +282,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     {/* Email Input with Autocomplete */}
                     <div className="flex flex-col relative">
                         <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                            Email khách hàng
+                            Email khách hàng <span className="text-red-500">*</span>
                         </label>
                         <input
                             ref={emailInputRef}
@@ -315,7 +316,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     {/* Service Dropdown */}
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                            Dịch vụ
+                            Dịch vụ <span className="text-red-500">*</span>
                         </label>
                         <select
                             value={selectedServiceId}
@@ -335,7 +336,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     {/* Date Picker */}
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                            Ngày hẹn
+                            Ngày hẹn <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                             <input
@@ -448,7 +449,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col">
                             <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                Tên thú cưng
+                                Tên thú cưng <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -460,15 +461,19 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         </div>
                         <div className="flex flex-col">
                             <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                Loài
+                                Loài <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
+                            <select
                                 value={speciePet}
                                 onChange={(e) => setSpeciePet(e.target.value)}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                placeholder="Nhập loài thú cưng"
-                            />
+                            >
+                                <option value="">Chọn loài</option>
+                                <option value="Chó">Chó</option>
+                                <option value="Mèo">Mèo</option>
+                                <option value="Chim">Chim</option>
+                                <option value="Khác">Khác</option>
+                            </select>
                         </div>
                     </div>
 
@@ -497,7 +502,35 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         Hủy
                     </button>
                     <button
-                        onClick={handleSave}
+                        onClick={() => {
+                            // Validation before showing confirm
+                            if (!email) {
+                                setError("Vui lòng nhập email khách hàng");
+                                return;
+                            }
+                            if (!selectedServiceId) {
+                                setError("Vui lòng chọn dịch vụ");
+                                return;
+                            }
+                            if (!selectedDate) {
+                                setError("Vui lòng chọn ngày hẹn");
+                                return;
+                            }
+                            if (!selectedBookingTimeId) {
+                                setError("Vui lòng chọn khung giờ");
+                                return;
+                            }
+                            if (!namePet) {
+                                setError("Vui lòng nhập tên thú cưng");
+                                return;
+                            }
+                            if (!speciePet) {
+                                setError("Vui lòng chọn loài thú cưng");
+                                return;
+                            }
+                            setError(null);
+                            setShowConfirmModal(true);
+                        }}
                         type="button"
                         disabled={saving}
                         className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -506,6 +539,54 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     </button>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                Xác nhận tạo lịch hẹn
+                            </h3>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            Bạn có chắc chắn muốn tạo lịch hẹn này không?
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                type="button"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowConfirmModal(false);
+                                    handleSave();
+                                }}
+                                type="button"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {saving && (
+                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                )}
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Modal>
     );
 };

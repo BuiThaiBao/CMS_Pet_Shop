@@ -4,6 +4,7 @@ import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/User/UserProfiles";
 import Calendar from "./pages/ServiceCalendar/Calendar";
+import AppointmentList from "./pages/ServiceCalendar/AppointmentList";
 import AppLayout from "./layout/AppLayout";
 import PrivateRouteAsync from "./components/common/PrivateRouteAsync";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -45,6 +46,7 @@ export default function App() {
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/appointments" element={<AppointmentList />} />
             <Route path="/category" element={<Category />} />
             <Route path="/category/add" element={<CategoryAdd />} />
             <Route path="/category/edit/:id" element={<CategoryEdit />} />
