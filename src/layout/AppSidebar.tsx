@@ -9,10 +9,14 @@ import {
   GridIcon,
   HorizontaLDots,
   PlugInIcon,
-  UserCircleIcon,
+  PieChartIcon,
+  ListIcon,
+  BoxCubeIcon,
+  ShootingStarIcon,
+  BoxIconLine,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
+
 
 type NavItem = {
   name: string;
@@ -23,7 +27,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: <PieChartIcon />,
     name: "nav.dashboard",
     subItems: [
       { name: "nav.dashboard", path: "/", pro: false },
@@ -36,7 +40,7 @@ const navItems: NavItem[] = [
     path: "/calendar",
   },
   {
-    icon: <GridIcon />,
+    icon: <ListIcon />,
     name: "nav.category",
     subItems: [
       { name: "category.categoryList", path: "/category" },
@@ -44,12 +48,11 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <GridIcon />,
+    icon: <BoxCubeIcon />,
     name: "nav.product",
     subItems: [
       { name: "product.productList", path: "/product" },
-      { name: "product.addProduct", path: "/product/add" },
-      { name: "product.addAllInOne", path: "/product/add-all-in-one" },
+      { name: "product.addProduct", path: "/product/add-all-in-one" },
     ],
   },
   {
@@ -62,7 +65,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <GridIcon />,
+    icon: <ShootingStarIcon />,
     name: "nav.service",
     subItems: [
       { name: "service.serviceList", path: "/service" },
@@ -70,16 +73,11 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <GridIcon />,
+    icon: <BoxIconLine />,
     name: "nav.orders",
     subItems: [
       { name: "order.orderList", path: "/orders" },
     ],
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "nav.profile",
-    path: "/profile",
   },
 ];
 
@@ -100,7 +98,7 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: "main" ;
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -116,14 +114,14 @@ const AppSidebar: React.FC = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
+    ["main"].forEach((menuType) => {
       const items = menuType === "main" ? navItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "others",
+                type: menuType as "main" ,
                 index,
               });
               submenuMatched = true;
@@ -150,7 +148,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
+  const handleSubmenuToggle = (index: number, menuType: "main" ) => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -163,7 +161,7 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+  const renderMenuItems = (items: NavItem[], menuType: "main" ) => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
@@ -361,17 +359,11 @@ const AppSidebar: React.FC = () => {
                     : "justify-start"
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  t("sidebar.others")
-                ) : (
-                  <HorizontaLDots />
-                )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
       </div>
     </aside>
   );

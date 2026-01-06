@@ -1,6 +1,6 @@
 {
     "nav": {
-        "dashboard": "Bảng điều khiển",
+        "dashboard": "Thống kê",
         "report": "Báo cáo",
         "category": "Danh mục",
         "product": "Sản phẩm",
@@ -139,7 +139,6 @@
         "deleteProduct": "Xóa sản phẩm",
         "confirmDelete": "Bạn có chắc chắn muốn xóa sản phẩm này?",
         "productList": "Danh sách sản phẩm",
-        "addAllInOne": "Thêm sản phẩm (Tất cả trong một)",
         "generalInfo": "Thông tin chung",
         "mediaUpload": "Tải lên hình ảnh",
         "variantGeneration": "Tạo biến thể",

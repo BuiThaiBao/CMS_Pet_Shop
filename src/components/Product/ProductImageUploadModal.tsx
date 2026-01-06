@@ -8,6 +8,7 @@ interface ProductImageUploadModalProps {
   onClose: () => void;
   productId: number | null;
   onUploadSuccess?: () => void;
+  existingImageCount?: number;
 }
 
 type UploadedImage = {
@@ -26,6 +27,7 @@ export default function ProductImageUploadModal({
   onClose,
   productId,
   onUploadSuccess,
+  existingImageCount = 0,
 }: ProductImageUploadModalProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -72,8 +74,8 @@ export default function ProductImageUploadModal({
     setUploadedImages([]);
 
     try {
-      // Create positions array
-      const positions = selectedFiles.map((_, index) => index + 1);
+      // Create positions array starting from existing count + 1
+      const positions = selectedFiles.map((_, index) => existingImageCount + index + 1);
 
       const data = await imageApi.upload(productId, selectedFiles, positions);
       const results = data.result || [];

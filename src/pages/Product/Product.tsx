@@ -499,7 +499,7 @@ export default function Product() {
                             <button
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                               onClick={() => navigate(`/product/edit/${p.id}`)}
-                              title="Edit product information"
+                              title="Edit product and variants"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -517,7 +517,7 @@ export default function Product() {
                             <button
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
                               onClick={() => handleViewDetail(p.id)}
-                              title="View details, manage variants & images"
+                              title="View product details (Read-only)"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -633,7 +633,6 @@ export default function Product() {
         onClose={handleCloseDetailModal}
         productId={selectedProductId}
         onOpenUpload={handleOpenUploadModal}
-        onProductUpdate={() => fetchProducts(pageNumber, pageSize, query)}
       />
 
       {/* Product Image Upload Modal */}
