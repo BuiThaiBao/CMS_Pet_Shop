@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
@@ -9,6 +10,7 @@ import authApi from "../../services/api/authApi";
 import Alert from "../ui/alert/Alert";
 
 export default function SignInForm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -47,7 +49,7 @@ export default function SignInForm() {
 
     // Validate identifier (email or username) - không được để trống
     if (!formData.identifier.trim()) {
-      errors.identifier = "Username or Email is required";
+      errors.identifier = t('auth.usernameRequired');
       isValid = false;
     }
 
@@ -56,15 +58,15 @@ export default function SignInForm() {
     // - Tối thiểu 6 ký tự
     // - Phải chứa ít nhất: 1 chữ thường (a-z), 1 chữ HOA (A-Z), 1 số (0-9), 1 ký tự đặc biệt
     if (!formData.password) {
-      errors.password = "Password is required";
+      errors.password = t('auth.passwordRequired');
       isValid = false;
     } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+      errors.password = t('auth.passwordMinLength');
       isValid = false;
     } else {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,}$/;
       if (!passwordRegex.test(formData.password)) {
-        errors.password = "Password must contain at least 1 lowercase, 1 uppercase, 1 number, and 1 special character";
+        errors.password = t('auth.passwordComplexity');
         isValid = false;
       }
     }
@@ -102,34 +104,34 @@ export default function SignInForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Back to dashboard
+          {t('common.back')} {t('nav.dashboard')}
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign In
+              {t('auth.signIn')}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign in!
+              {t('auth.signInPrompt')}
             </p>
           </div>
           <div>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 {error && (
-                  <Alert variant="error" title="Login failed" message={error} />
+                  <Alert variant="error" title={t('auth.loginFailed')} message={error} />
                 )}
                 <div>
                   <Label>
-                    Username or Email <span className="text-error-500">*</span>{" "}
+                    {t('auth.usernameOrEmail')} <span className="text-error-500">*</span>{" "}
                   </Label>
                   <Input
                     name="identifier"
                     value={formData.identifier}
                     onChange={handleInputChange}
-                    placeholder="info@gmail.com"
+                    placeholder={t('auth.emailPlaceholder')}
                   />
                   {fieldErrors.identifier && (
                     <p className="mt-1 text-sm text-red-600">
@@ -139,7 +141,7 @@ export default function SignInForm() {
                 </div>
                 <div>
                   <Label>
-                    Password <span className="text-error-500">*</span>{" "}
+                    {t('auth.password')} <span className="text-error-500">*</span>{" "}
                   </Label>
                   <div className="relative">
                     <Input
@@ -147,7 +149,7 @@ export default function SignInForm() {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      placeholder="Enter your password"
+                      placeholder={t('auth.enterPassword')}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -170,14 +172,14 @@ export default function SignInForm() {
                   <div className="flex items-center gap-3">
                     <Checkbox checked={isChecked} onChange={setIsChecked} />
                     <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
+                      {t('auth.keepLoggedIn')}
                     </span>
                   </div>
                   <Link
                     to="/reset-password"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </Link>
                 </div>
                 <div>
@@ -187,7 +189,7 @@ export default function SignInForm() {
                     size="sm"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Signing in..." : "Sign in"}
+                    {isLoading ? t('auth.signingIn') : t('auth.signIn')}
                   </Button>
                 </div>
               </div>

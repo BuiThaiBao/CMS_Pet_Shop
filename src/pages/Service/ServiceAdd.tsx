@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
@@ -8,6 +9,7 @@ import Select from "../../components/form/Select";
 import { TrashBinIcon } from "../../icons";
 
 export default function ServiceAdd() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
@@ -61,15 +63,15 @@ export default function ServiceAdd() {
       const res = await serviceApi.create(payload);
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
-        setMessage("Create service successfully");
+        setMessage(t('service.createSuccess'));
         setTimeout(() => {
           navigate("/service");
         }, 1500);
       } else {
-        setError(data?.message || "Unknown response");
+        setError(data?.message || t('category.unknownResponse'));
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to create service");
+      setError(err?.response?.data?.message || err?.message || t('service.createError'));
     } finally {
       setLoading(false);
     }
@@ -129,16 +131,16 @@ export default function ServiceAdd() {
 
   return (
     <>
-      <PageMeta title="Add Service" description="Create a new service" />
+      <PageMeta title={t('service.addService')} description={t('service.createNewService')} />
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Add Service</h2>
+          <h2 className="text-lg font-semibold">{t('service.addService')}</h2>
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigate("/service")}
           >
-            ← Back to List
+            ← {t('common.backToList')}
           </Button>
         </div>
 
@@ -157,7 +159,7 @@ export default function ServiceAdd() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Icon *
+                {t('service.icon')} *
               </label>
               <Select
                 options={serviceOptions}
@@ -169,7 +171,7 @@ export default function ServiceAdd() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Tên dịch vụ *</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('service.serviceName')} *</label>
               <input
                 value={title}
                 onChange={(e) => {
@@ -179,7 +181,7 @@ export default function ServiceAdd() {
                   debouncedCheckTitle(e.target.value);
                 }}
                 className="w-full border rounded px-3 py-2"
-                placeholder="Enter service title"
+                placeholder={t('service.enterServiceTitle')}
               />
               {titleError && (
                 <p className="text-red-500 text-sm mt-1">{titleError}</p>
@@ -192,47 +194,47 @@ export default function ServiceAdd() {
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Description
+              {t('common.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
-              placeholder="Description"
+              placeholder={t('common.enterDescription')}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Duration (minutes)
+                {t('service.duration')}
               </label>
               <input
                 type="number"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(e.target.value)}
                 className="w-full border rounded px-3 py-2"
-                placeholder="Enter duration"
+                placeholder={t('service.enterDuration')}
                 min="0"
               />
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Price (VND)
+                {t('service.priceVND')}
               </label>
               <input
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 className="w-full border rounded px-3 py-2"
-                placeholder="Enter price"
+                placeholder={t('service.enterPrice')}
                 min="0"
               />
             </div>
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-600 mb-2">Booking Times</label>
+            <label className="block text-sm text-gray-600 mb-2">{t('service.bookingTimes')}</label>
             {bookingTimes.map((slot, index) => (
               <div key={index} className="flex items-center gap-2 mb-2">
                 <input
@@ -257,7 +259,7 @@ export default function ServiceAdd() {
                     setBookingTimes(newSlots);
                   }}
                   className="border rounded px-3 py-2 w-20"
-                  placeholder="Max"
+                  placeholder={t('service.max')}
                   min="1"
                   required
                   aria-label="Max Capacity"
@@ -281,7 +283,7 @@ export default function ServiceAdd() {
               variant="outline"
               onClick={() => setBookingTimes([...bookingTimes, { startTime: "", maxCapacity: "" }])}
             >
-              Add Slot
+              {t('service.addSlot')}
             </Button>
           </div>
 
@@ -293,11 +295,11 @@ export default function ServiceAdd() {
                 disabled={loading}
                 className="bg-indigo-600"
               >
-                {loading ? "Saving..." : "Save"}
+                {loading ? t('common.saving') : t('common.save')}
               </Button>
             )}
             <Button size="md" variant="outline" type="button" onClick={reset}>
-              Reset
+              {t('common.reset')}
             </Button>
           </div>
         </form>
