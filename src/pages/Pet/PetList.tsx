@@ -51,18 +51,40 @@ export default function PetList() {
   ];
   const ageGroupOptions = [
     { value: "", label: t('pet.allAgeGroups') },
-    { value: "Young", label: t('pet.young') },
-    { value: "Child", label: t('pet.child') },
-    { value: "Adult", label: t('pet.adult') },
-    { value: "Senior", label: t('pet.senior') },
+    { value: "Young", label: "Trẻ" },
+    { value: "Child", label: "Nhỏ" },
+    { value: "Adult", label: "Trưởng thành" },
+    { value: "Senior", label: "Già" },
   ];
   const statusOptions = [
     { value: "", label: t('pet.allStatuses') },
-    { value: "AVAILABLE", label: t('pet.available') },
-    { value: "ADOPTED", label: t('pet.adopted') },
-    { value: "PENDING_APPROVAL", label: t('pet.pending') },
-
+    { value: "AVAILABLE", label: "Có sẵn" },
+    { value: "ADOPTED", label: "Đã nhận nuôi" },
+    { value: "PENDING_APPROVAL", label: "Chờ duyệt" },
+    { value: "PENDING", label: "Chờ xử lý" },
   ];
+
+  const genderMap: Record<string, string> = {
+    male: "Đực",
+    female: "Cái",
+    other: "Khác",
+  };
+
+  const healthMap: Record<string, string> = {
+    good: "Tốt",
+    bad: "Kém",
+    normal: "Bình thường",
+  };
+
+  const getGenderLabel = (val: string) => {
+    if (!val) return "";
+    return genderMap[val.toLowerCase()] || val;
+  };
+
+  const getHealthLabel = (val: string) => {
+    if (!val) return "";
+    return healthMap[val.toLowerCase()] || val;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -262,6 +284,16 @@ export default function PetList() {
     setSelectedPetId(null);
   };
 
+  const getLabel = (options: { value: string; label: string }[], val: any) => {
+    if (!val) return "";
+    const strVal = String(val);
+    // Skip the "All" option (empty value)
+    const found = options.find(
+      (o) => o.value && (o.value === strVal || o.value.toLowerCase() === strVal.toLowerCase())
+    );
+    return found ? found.label : strVal;
+  };
+
   return (
     <>
       <PageMeta title={t('pet.petList')} description={t('pet.listOfAllPets')} />
@@ -341,14 +373,14 @@ export default function PetList() {
                       return (
                       <tr key={key} className="border-b">
                         <td className="py-4 px-4 font-medium">{pet.name}</td>
-                        <td className="py-4 px-4">{pet.animal}</td>
+                        <td className="py-4 px-4">{getLabel(animalOptions, pet.animal)}</td>
                         <td className="py-4 px-4">{pet.breed}</td>
                         <td className="py-4 px-4">{pet.age}</td>
-                        <td className="py-4 px-4">{pet.gender}</td>
+                        <td className="py-4 px-4">{getGenderLabel(pet.gender)}</td>
                         <td className="py-4 px-4">{pet.weight}</td>
-                        <td className="py-4 px-4">{pet.ageGroup}</td>
-                        <td className="py-4 px-4">{pet.healthStatus || "Good"}</td>
-                        <td className="py-4 px-4">{pet.status}</td> 
+                        <td className="py-4 px-4">{getLabel(ageGroupOptions, pet.ageGroup)}</td>
+                        <td className="py-4 px-4">{getHealthLabel(pet.healthStatus || "Good")}</td>
+                        <td className="py-4 px-4">{getLabel(statusOptions, pet.status)}</td> 
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <Switch

@@ -4,6 +4,7 @@ import adoptApi from '../../services/api/adoptApi';
 import http from '../../services/api/http';
 import './AdoptDetail.css';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import Alert from '../../components/ui/alert/Alert';
 
 export default function AdoptDetail() {
   const { id } = useParams();
@@ -14,6 +15,14 @@ export default function AdoptDetail() {
   const [updating, setUpdating] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  // Auto-clear toast
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const fetchDetail = async (adoptId) => {
     if (!adoptId) return;
@@ -65,7 +74,7 @@ export default function AdoptDetail() {
         throw new Error('API method to update adopt status not found');
       }
       await fetchDetail(adopt.adoptId);
-      alert('Cập nhật trạng thái thành công');
+      setToast({ variant: 'success', title: 'Thành công', message: 'Cập nhật trạng thái thành công' });
     } catch (err) {
       console.error('Update status error', err, err?.response?.data);
       const statusCode = err?.response?.status;
@@ -74,7 +83,7 @@ export default function AdoptDetail() {
           const url = `/adopt/status/${adopt.adoptId}`;
           await http.put(url, { status: newStatus, adoptId: adopt.adoptId });
           await fetchDetail(adopt.adoptId);
-          alert('Cập nhật trạng thái thành công (fallback)');
+          setToast({ variant: 'success', title: 'Thành công', message: 'Cập nhật trạng thái thành công' });
           setUpdating(false);
           return;
         } catch (e2) {
@@ -84,7 +93,7 @@ export default function AdoptDetail() {
         try {
           await http.put('/adopt/status', { id: adopt.adoptId, status: newStatus });
           await fetchDetail(adopt.adoptId);
-          alert('Cập nhật trạng thái thành công (fallback2)');
+          setToast({ variant: 'success', title: 'Thành công', message: 'Cập nhật trạng thái thành công' });
           setUpdating(false);
           return;
         } catch (e3) {
@@ -92,7 +101,11 @@ export default function AdoptDetail() {
         }
       }
 
-      alert(err?.response?.data?.message || err?.message || 'Cập nhật thất bại');
+      setToast({ 
+        variant: 'error', 
+        title: 'Lỗi', 
+        message: err?.response?.data?.message || err?.message || 'Cập nhật thất bại' 
+      });
     } finally {
       setUpdating(false);
     }
@@ -107,6 +120,26 @@ export default function AdoptDetail() {
       CANCELED: 'Đã hủy',
     };
     return labels[status] || status;
+  };
+
+  const getAnimalLabel = (val) => {
+    const map = {
+      dog: "Chó",
+      cat: "Mèo",
+      bird: "Chim",
+      rabbit: "Thỏ",
+      other: "Khác"
+    };
+    return map[String(val).toLowerCase()] || val;
+  };
+
+  const getGenderLabel = (val) => {
+    const map = {
+      male: "Đực",
+      female: "Cái",
+      other: "Khác"
+    };
+    return map[String(val).toLowerCase()] || val;
   };
 
   const getGenderClass = (gender) => {
@@ -143,6 +176,11 @@ export default function AdoptDetail() {
 
   return (
     <div className="adopt-detail-root">
+      {toast && (
+        <div className="fixed right-4 top-24 z-[9999] w-96">
+          <Alert variant={toast.variant === "error" ? "error" : "success"} title={toast.title} message={toast.message} />
+        </div>
+      )}
       <div className="adopt-detail-wrap">
         <div className="adopt-detail-header">
           <button className="btn btn-back" onClick={() => navigate(-1)}>
@@ -164,17 +202,17 @@ export default function AdoptDetail() {
               <h3>{adopt.pet?.name || 'Chưa có tên'}</h3>
               <div className="pet-meta">
                 {adopt.pet?.animal && (
-                  <span className="pet-tag">🐾 {adopt.pet.animal}</span>
+                  <span className="pet-tag">🐾 {getAnimalLabel(adopt.pet.animal)}</span>
                 )}
                 {adopt.pet?.breed && (
                   <span className="pet-tag">🏷️ {adopt.pet.breed}</span>
                 )}
                 {adopt.pet?.age && (
-                  <span className="pet-tag">📅 {adopt.pet.age}</span>
+                  <span className="pet-tag">📅 {adopt.pet.age} tuổi</span>
                 )}
                 {adopt.pet?.gender && (
                   <span className={`pet-tag ${getGenderClass(adopt.pet.gender)}`}>
-                    {adopt.pet.gender.toLowerCase().includes('đực') || adopt.pet.gender.toLowerCase().includes('male') ? '♂️' : '♀️'} {adopt.pet.gender}
+                    {adopt.pet.gender.toLowerCase().includes('đực') || adopt.pet.gender.toLowerCase().includes('male') ? '♂️' : '♀️'} {getGenderLabel(adopt.pet.gender)}
                   </span>
                 )}
               </div>

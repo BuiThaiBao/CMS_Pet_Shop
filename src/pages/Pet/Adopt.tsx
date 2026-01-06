@@ -81,6 +81,19 @@ export default function Adopt() {
     load();
   }, [page, size, status, debouncedCode, petId]);
 
+  const statusMap: Record<string, string> = {
+    PENDING: "Chờ xác nhận",
+    APPROVED: "Đã duyệt",
+    REJECTED: "Bị từ chối",
+    COMPLETED: "Hoàn thành",
+    CANCELED: "Đã hủy"
+  };
+
+  const getStatusLabel = (val: string) => {
+    if (!val) return "";
+    return statusMap[val] || val;
+  };
+
   return (
     <div className="adopt-page">
       <h1 className="adopt-header">Nhận nuôi thú cưng</h1>
@@ -91,11 +104,9 @@ export default function Adopt() {
             <label className="form-label">Trạng thái</label>
             <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">Tất cả</option>
-              <option value="PENDING">Chờ xác nhận</option>
-              <option value="APPROVED">Đã duyệt</option>
-              <option value="REJECTED">Bị từ chối</option>
-              <option value="COMPLETED">Hoàn thành</option>
-              <option value="CANCELED">Đã hủy</option>
+              {Object.entries(statusMap).map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
             </select>
           </div>
 
@@ -150,7 +161,7 @@ export default function Adopt() {
                     })()}
                   </td>
                   <td>{r.createdDate ? new Date(r.createdDate).toLocaleDateString('vi-VN') : ''}</td>
-                  <td>{r.status}</td>
+                  <td>{getStatusLabel(r.status)}</td>
                   <td>{r.note}</td>
                   <td><Link to={`/adopt/${r.id}`} className="btn-link">Xem chi tiết</Link></td>
                 </tr>
