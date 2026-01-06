@@ -450,7 +450,7 @@ export default function Product() {
                               : ""}
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-600 max-w-[360px] truncate">
+                        <td className="py-4 px-4 text-sm text-gray-600 w-[240px] truncate">
                           {p.shortDescription}
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
@@ -532,7 +532,7 @@ export default function Product() {
                               {t('common.edit')}
                             </button>
                             <button
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+                              className="inline-flex whitespace-nowrap items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
                               onClick={() => handleViewDetail(p.id)}
                               title="View product details (Read-only)"
                             >

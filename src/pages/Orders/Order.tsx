@@ -361,8 +361,9 @@ export default function OrderPage() {
                     <td className="px-4 py-4">
                       <button
                         onClick={() => navigate(`/orders/${o.id}`)}
-                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="inline-flex whitespace-nowrap items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
                       >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                         {t('order.viewDetails')}
                       </button>
                     </td>
