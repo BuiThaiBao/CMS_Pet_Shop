@@ -9,7 +9,9 @@
         "adopt": "Nhận nuôi",
         "orders": "Đơn hàng",
         "calendar": "Lịch hẹn",
-        "profile": "Hồ sơ"
+        "profile": "Hồ sơ",
+        "appointment": "Lịch hẹn",
+        "appointmentList": "Danh sách lịch"
     },
     "sidebar": {
         "menu": "Trình đơn",
@@ -44,7 +46,7 @@
         "featured": "Nổi bật",
         "notFeatured": "Không nổi bật",
         "active": "Hoạt động",
-        "deleted": "Đã xóa",
+        "deleted": "Kích hoạt",
         "createdAt": "Ngày tạo",
         "updatedAt": "Ngày cập nhật",
         "showing": "Hiển thị",
@@ -355,7 +357,7 @@
         "orders": "đơn hàng"
     },
     "calendar": {
-        "title": "Lịch hẹn",
+        "appointment": "Lịch hẹn",
         "addAppointment": "Thêm lịch hẹn",
         "editAppointment": "Sửa lịch hẹn",
         "appointmentDetails": "Chi tiết lịch hẹn",

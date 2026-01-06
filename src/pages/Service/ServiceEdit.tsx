@@ -220,13 +220,13 @@ export default function ServiceEdit() {
       <PageMeta title="Edit Service" description={`Edit service #${id}`} />
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Edit Service</h2>
+          <h2 className="text-lg font-semibold">Chỉnh sửa dịch vụ</h2>
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigate("/service")}
           >
-            ← Back to List
+            ← Quay lại
           </Button>
         </div>
 

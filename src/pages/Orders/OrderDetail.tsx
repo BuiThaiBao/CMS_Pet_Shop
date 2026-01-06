@@ -4,6 +4,7 @@ import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import orderApi from "../../services/api/orderApi";
 import { OrderStatus } from "./Order";
+import Button from "../../components/ui/button/Button";
 
 /* ================= TYPES ================= */
 
@@ -46,6 +47,15 @@ const BUTTON_STYLE: Record<OrderStatus, string> = {
   CANCELLED: "bg-red-600 hover:bg-red-700",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  WAITING_PAYMENT: "Chờ thanh toán",
+  PROCESSING: "Đang xử lý",
+  SHIPPED: "Đã giao cho vận chuyển",
+  DELIVERED: "Đã giao hàng",
+  COMPLETED: "Hoàn thành",
+  CANCELLED: "Đã hủy",
+};
+
 /* ================= PAGE ================= */
 
 export default function OrderDetail() {
@@ -72,13 +82,13 @@ export default function OrderDetail() {
       const result = res?.data?.result;
 
       if (!result || result.length === 0) {
-        setError("Order not found");
+        setError("Không tìm thấy đơn hàng");
         return;
       }
 
       setOrderDetails(result);
     } catch (err: any) {
-      setError(err?.message || "Failed to fetch order details");
+      setError(err?.message || "Lỗi khi tải chi tiết đơn hàng");
     } finally {
       setLoading(false);
     }
@@ -125,7 +135,7 @@ export default function OrderDetail() {
       // Refresh order details
       fetchOrderDetail();
     } catch (err: any) {
-      alert(err?.message || "Update failed");
+      alert(err?.message || "Cập nhật thất bại");
     } finally {
       setUpdating(false);
     }
@@ -134,9 +144,9 @@ export default function OrderDetail() {
   if (loading) {
     return (
       <>
-        <PageMeta title="Order Detail" description="View order details" />
+        <PageMeta title="Chi tiết đơn hàng" description="Xem chi tiết đơn hàng" />
         <div className="p-4">
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8">Đang tải...</div>
         </div>
       </>
     );
@@ -145,15 +155,16 @@ export default function OrderDetail() {
   if (error || !orderInfo) {
     return (
       <>
-        <PageMeta title="Order Detail" description="View order details" />
+        <PageMeta title="Chi tiết đơn hàng" description="Xem chi tiết đơn hàng" />
         <div className="p-4">
-          <Alert variant="error" title="Error" message={error || "Order not found"} />
-          <button
+          <Alert variant="error" title="Lỗi" message={error || "Không tìm thấy đơn hàng"} />
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => navigate("/orders")}
-            className="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
           >
-            Back to Orders
-          </button>
+            ← Quay lại đơn hàng
+          </Button>
         </div>
       </>
     );
@@ -161,24 +172,25 @@ export default function OrderDetail() {
 
   return (
     <>
-      <PageMeta title={`Order ${orderInfo.orderCode}`} description="View order details" />
+      <PageMeta title={`Đơn hàng ${orderInfo.orderCode}`} description="Xem chi tiết đơn hàng" />
 
       <div className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold">Order Details</h1>
-          <button
+          <h1 className="text-xl font-semibold">Chi tiết đơn hàng</h1>
+           <Button
+            size="sm"
+            variant="outline"
             onClick={() => navigate("/orders")}
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
           >
-            Back to Orders
-          </button>
+            ← Quay lại đơn hàng
+          </Button>
         </div>
 
         {/* Status Transition Actions */}
         {availableStatuses.length > 0 && (
           <div className="mb-4 flex items-center gap-3 flex-wrap">
-            <span className="text-sm text-gray-600">Change Status:</span>
+            <span className="text-sm text-gray-600">Thay đổi trạng thái:</span>
             {availableStatuses.map((status) => (
               <button
                 key={status}
@@ -186,7 +198,7 @@ export default function OrderDetail() {
                 onClick={() => handleStatusUpdate(status)}
                 className={`px-4 py-2 rounded text-white text-sm ${BUTTON_STYLE[status]} disabled:opacity-50`}
               >
-                {status.replace("_", " ")}
+                {STATUS_LABELS[status] || status}
               </button>
             ))}
           </div>
@@ -197,29 +209,29 @@ export default function OrderDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">Order Information</h2>
+              <h2 className="text-lg font-semibold mb-4">Thông tin đơn hàng</h2>
               
               <div className="space-y-3">
                 <div>
-                  <span className="text-sm text-gray-500">Order Code</span>
+                  <span className="text-sm text-gray-500">Mã đơn hàng</span>
                   <p className="font-medium">{orderInfo.orderCode}</p>
                 </div>
 
                 <div>
-                  <span className="text-sm text-gray-500">Status</span>
+                  <span className="text-sm text-gray-500">Trạng thái</span>
                   <div className="mt-1">
                     <span
                       className={`inline-block px-3 py-1 rounded text-sm font-medium ${
                         STATUS_STYLE[orderInfo.status] || "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {orderInfo.status}
+                      {STATUS_LABELS[orderInfo.status] || orderInfo.status}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-sm text-gray-500">Order Date</span>
+                  <span className="text-sm text-gray-500">Ngày đặt hàng</span>
                   <p className="font-medium">{orderInfo.orderDate}</p>
                 </div>
               </div>
@@ -227,16 +239,16 @@ export default function OrderDetail() {
 
             {/* Right Column */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">Shipping Information</h2>
+              <h2 className="text-lg font-semibold mb-4">Thông tin vận chuyển</h2>
               
               <div className="space-y-3">
                 <div>
-                  <span className="text-sm text-gray-500">Shipping Address</span>
+                  <span className="text-sm text-gray-500">Địa chỉ giao hàng</span>
                   <p className="font-medium">{orderInfo.shippingAddress}</p>
                 </div>
 
                 <div>
-                  <span className="text-sm text-gray-500">Shipping Cost</span>
+                  <span className="text-sm text-gray-500">Phí vận chuyển</span>
                   <p className="font-medium">{orderInfo.shippingAmount.toLocaleString()} đ</p>
                 </div>
               </div>
@@ -247,18 +259,18 @@ export default function OrderDetail() {
         {/* Order Items Table */}
         <div className="bg-white border rounded-lg overflow-hidden mb-6">
           <div className="p-4 border-b bg-gray-50">
-            <h2 className="text-lg font-semibold">Order Items</h2>
+            <h2 className="text-lg font-semibold">Sản phẩm đơn hàng</h2>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b bg-gray-50 text-sm text-gray-500">
                 <tr>
-                  <th className="px-4 py-3 text-left">Product</th>
-                  <th className="px-4 py-3 text-left">Variant Details</th>
-                  <th className="px-4 py-3 text-right">Unit Price</th>
-                  <th className="px-4 py-3 text-center">Quantity</th>
-                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="px-4 py-3 text-left">Sản phẩm</th>
+                  <th className="px-4 py-3 text-left">Chi tiết biến thể</th>
+                  <th className="px-4 py-3 text-right">Đơn giá</th>
+                  <th className="px-4 py-3 text-center">Số lượng</th>
+                  <th className="px-4 py-3 text-right">Tổng</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,8 +292,8 @@ export default function OrderDetail() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">
-                        <p className="text-gray-600">Variant ID: {item.variantId}</p>
-                        <p className="text-gray-600">Stock: {item.stockQuantity}</p>
+                        <p className="text-gray-600">ID biến thể: {item.variantId}</p>
+                        <p className="text-gray-600">Tồn kho: {item.stockQuantity}</p>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-right font-medium">
@@ -304,22 +316,22 @@ export default function OrderDetail() {
 
         {/* Order Summary */}
         <div className="bg-white border rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+          <h2 className="text-lg font-semibold mb-4">Tóm tắt đơn hàng</h2>
           
           <div className="max-w-md ml-auto space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal</span>
+              <span className="text-gray-600">Tạm tính</span>
               <span className="font-medium">{subtotal.toLocaleString()} đ</span>
             </div>
             
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Shipping</span>
+              <span className="text-gray-600">Vận chuyển</span>
               <span className="font-medium">{orderInfo.shippingAmount.toLocaleString()} đ</span>
             </div>
             
             <div className="border-t pt-2 mt-2">
               <div className="flex justify-between">
-                <span className="font-semibold">Total</span>
+                <span className="font-semibold">Tổng cộng</span>
                 <span className="font-bold text-lg text-blue-600">
                   {orderInfo.totalAmount.toLocaleString()} đ
                 </span>

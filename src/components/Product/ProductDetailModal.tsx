@@ -137,18 +137,18 @@ export default function ProductDetailModal({
                 <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                   <span>ID: {product.id}</span>
                   {product.categoryName && (
-                    <span>Category: {product.categoryName}</span>
+                    <span>Danh mục: {product.categoryName}</span>
                   )}
-                  {product.animal && <span>Animal: {product.animal}</span>}
-                  {product.brand && <span>Brand: {product.brand}</span>}
+                  {product.animal && <span>Loài: {product.animal}</span>}
+                  {product.brand && <span>Thương hiệu: {product.brand}</span>}
                   {product.isFeatured === "1" && (
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                      Featured
+                      Nổi bật
                     </span>
                   )}
                   {product.isDeleted === "1" && (
                     <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
-                      Deleted
+                      Xóa
                     </span>
                   )}
                 </div>
@@ -361,13 +361,13 @@ export default function ProductDetailModal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                 <div>
                   <p className="text-sm text-gray-600">
-                    <span className="font-semibold">Created:</span>{" "}
+                    <span className="font-semibold">Ngày tạo:</span>{" "}
                     {product.createdDate || "N/A"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">
-                    <span className="font-semibold">Updated:</span>{" "}
+                    <span className="font-semibold">Ngày sửa:</span>{" "}
                     {product.updatedDate || "N/A"}
                   </p>
                 </div>
@@ -379,7 +379,7 @@ export default function ProductDetailModal({
                   onClick={onClose}
                   className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                  Close
+                  Đóng
                 </button>
               </div>
             </div>

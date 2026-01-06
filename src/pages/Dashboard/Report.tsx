@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import * as XLSX from "xlsx";
 import PageMeta from "../../components/common/PageMeta";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   getDashboardSummary,
   getOrderCountByStatus,
@@ -273,33 +275,6 @@ export default function Report() {
     }
   };
 
-  const exportWeeklyRevenue = async () => {
-    try {
-      setLoading("weekly");
-      setShowModal(null);
-      const data = await getWeeklyRevenue(params.startDate, params.endDate);
-      
-      if (data.length === 0) {
-        downloadExcel([{
-          "Tuần": `${params.startDate} - ${params.endDate}`,
-          "Doanh thu (VNĐ)": 0,
-          "Số đơn hàng": 0,
-        }], `bao_cao_doanh_thu_theo_tuan`, "Doanh thu theo tuần");
-      } else {
-        const formattedData = data.map(d => ({
-          "Tuần": d.weekLabel,
-          "Doanh thu (VNĐ)": d.revenue,
-          "Số đơn hàng": d.orderCount,
-        }));
-        downloadExcel(formattedData, `bao_cao_doanh_thu_theo_tuan`, "Doanh thu theo tuần");
-      }
-      showMessage(`Xuất báo cáo doanh thu theo tuần thành công!`);
-    } catch (err) {
-      showMessage("Lỗi xuất báo cáo: " + err);
-    } finally {
-      setLoading(null);
-    }
-  };
 
   const exportAll = async () => {
     try {
@@ -406,7 +381,6 @@ export default function Report() {
     { id: "summary" as ReportType, name: "Tổng quan Dashboard", desc: "Tổng đơn, doanh thu, khách hàng", action: exportSummary, icon: "📈", hasParams: false },
     { id: "orders" as ReportType, name: "Trạng thái đơn hàng", desc: "Số đơn theo từng trạng thái", action: exportOrderStatus, icon: "📦", hasParams: false },
     { id: "daily" as ReportType, name: "Doanh thu theo ngày", desc: "Doanh thu từng ngày (chọn khoảng)", action: exportDailyRevenue, icon: "📆", hasParams: true },
-    { id: "weekly" as ReportType, name: "Doanh thu theo tuần", desc: "Doanh thu từng tuần (chọn khoảng)", action: exportWeeklyRevenue, icon: "📅", hasParams: true },
     { id: "monthly" as ReportType, name: "Doanh thu theo tháng", desc: "Doanh thu tháng cụ thể", action: exportMonthlyRevenue, icon: "🗓️", hasParams: true },
     { id: "products" as ReportType, name: "Sản phẩm bán chạy", desc: "Top N sản phẩm", action: exportTopProducts, icon: "🏆", hasParams: true },
     { id: "category" as ReportType, name: "Doanh thu theo danh mục", desc: "Phân tích doanh thu từng danh mục", action: exportCategoryRevenue, icon: "🗂️", hasParams: false },
@@ -433,24 +407,41 @@ export default function Report() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Từ ngày
+                    📅 Từ ngày
                   </label>
-                  <input
-                    type="date"
-                    value={params.startDate}
-                    onChange={(e) => setParams({ ...params, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  <DatePicker
+                    selected={params.startDate ? new Date(params.startDate) : null}
+                    onChange={(date: Date | null) => {
+                      if (date) {
+                        setParams({ ...params, startDate: formatDate(date) });
+                      }
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholderText="Chọn ngày bắt đầu"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Đến ngày
+                    📅 Đến ngày
                   </label>
-                  <input
-                    type="date"
-                    value={params.endDate}
-                    onChange={(e) => setParams({ ...params, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  <DatePicker
+                    selected={params.endDate ? new Date(params.endDate) : null}
+                    onChange={(date: Date | null) => {
+                      if (date) {
+                        setParams({ ...params, endDate: formatDate(date) });
+                      }
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholderText="Chọn ngày kết thúc"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    minDate={params.startDate ? new Date(params.startDate) : undefined}
                   />
                 </div>
               </div>
