@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
@@ -29,6 +30,7 @@ export type Variant = {
 };
 
 export default function ProductCreateAllInOne() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // General info
@@ -324,26 +326,26 @@ export default function ProductCreateAllInOne() {
       }
 
       if (productImages.length === 0) {
-        throw new Error("At least one image is required");
+        throw new Error(t('product.atLeastOneImage'));
       }
 
       if (variants.length === 0) {
-        throw new Error("At least one variant is required");
+        throw new Error(t('product.atLeastOneVariant'));
       }
 
       // Validate all variants
       for (const variant of variants) {
         if (!variant.variantName.trim()) {
-          throw new Error("All variants must have a name");
+          throw new Error(t('product.allVariantsMustHaveName'));
         }
         if (Number(variant.price) <= 0) {
           throw new Error(
-            `Variant "${variant.variantName}" must have a price > 0`
+            `${t('product.variantPriceGreaterThanZero')}: "${variant.variantName}"`
           );
         }
         if (Number(variant.stockQuantity) < 0) {
           throw new Error(
-            `Variant "${variant.variantName}" must have stock quantity >= 0`
+            `${t('product.variantStockGreaterOrEqualZero')}: "${variant.variantName}"`
           );
         }
       }
@@ -388,7 +390,7 @@ export default function ProductCreateAllInOne() {
       if (isSuccess) {
         setError(null); // Clear any previous errors
         setMessage(
-          "Product created successfully with all variants and images!"
+          t('product.productCreatedSuccess')
         );
         reset();
         // Redirect to product list after 1.5 seconds
@@ -504,11 +506,11 @@ export default function ProductCreateAllInOne() {
   return (
     <>
       <PageMeta
-        title="Create Product - All in One"
-        description="Create a product with images and variants"
+        title={t('product.createProductAllInOne')}
+        description={t('product.createProductAllInOneDescription')}
       />
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6">Create Product - All in One</h2>
+        <h2 className="text-2xl font-bold mb-6">{t('product.createProductAllInOne')}</h2>
 
         {/* Alert Messages */}
         {error && (
@@ -553,7 +555,7 @@ export default function ProductCreateAllInOne() {
                 {idx + 1}
               </button>
 
-              <span className="text-sm font-medium capitalize">{step}</span>
+              <span className="text-sm font-medium capitalize">{t(`product.${step}`)}</span>
               {idx < 2 && <span className="text-gray-400">→</span>}
             </div>
           ))}
@@ -564,19 +566,19 @@ export default function ProductCreateAllInOne() {
           {currentStep === "info" && (
             <div>
               <h3 className="text-lg font-semibold mb-4">
-                Step 1: General Information & Upload Images
+                {t('product.step1Title')}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category *
+                    {t('product.category')} *
                   </label>
                   <div className="max-w-xs">
                     <Select
                       options={catOptions}
                       placeholder={
-                        catLoading ? "Loading..." : "Select a category"
+                        catLoading ? t('product.loadingCategories') : t('product.selectCategory')
                       }
                       onChange={(val) => setCategoryId(val)}
                       defaultValue={categoryId}
@@ -592,7 +594,7 @@ export default function ProductCreateAllInOne() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product Name *
+                    {t('product.productName')} *
                   </label>
 
                   <input
@@ -610,24 +612,24 @@ export default function ProductCreateAllInOne() {
                         ? "border-green-500"
                         : ""
                     }`}
-                    placeholder="Enter product name"
+                    placeholder={t('product.enterProductName')}
                   />
 
                   {/* STATUS MESSAGE */}
                   <div className="mt-1 text-sm">
                     {nameChecking && (
-                      <span className="text-gray-500">Checking name...</span>
+                      <span className="text-gray-500">{t('product.checkingName')}</span>
                     )}
 
                     {!nameChecking && nameExists === true && (
                       <span className="text-red-600">
-                        ❌ Product name already exists
+                        ❌ {t('product.productNameExists')}
                       </span>
                     )}
 
                     {!nameChecking && nameExists === false && name.trim() && (
                       <span className="text-green-600">
-                        ✔ Product name is available
+                        ✔ {t('product.productNameAvailable')}
                       </span>
                     )}
                   </div>
@@ -636,26 +638,26 @@ export default function ProductCreateAllInOne() {
 
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Short Description
+                  {t('product.shortDescription')}
                 </label>
                 <input
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
                   type="text"
                   className="w-full border rounded px-3 py-2"
-                  placeholder="Short description (one line)"
+                  placeholder={t('product.shortDescriptionPlaceholder')}
                 />
               </div>
 
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Description
+                  {t('common.description')}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full border rounded px-3 py-2 h-32"
-                  placeholder="Detailed description..."
+                  placeholder={t('product.detailedDescriptionPlaceholder')}
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -668,20 +670,20 @@ export default function ProductCreateAllInOne() {
                     onChange={(e) => setAnimal(e.target.value)}
                     type="text"
                     className="w-full border rounded px-3 py-2"
-                    placeholder="Dog / Cat / Bird..."
+                    placeholder={t('product.animalPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Brand
+                    {t('product.brand')}
                   </label>
                   <input
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
                     type="text"
                     className="w-full border rounded px-3 py-2"
-                    placeholder="Royal Canin, Whiskas..."
+                    placeholder={t('product.brandPlaceholder')}
                   />
                 </div>
               </div>
@@ -695,18 +697,18 @@ export default function ProductCreateAllInOne() {
                   className="w-4 h-4 rounded"
                 />
                 <label htmlFor="featured" className="text-sm font-medium">
-                  Featured Product
+                  {t('product.featuredProduct')}
                 </label>
               </div>
 
               {/* Image Upload Section */}
               <div className="mt-6 border-t pt-6">
                 <h4 className="text-base font-semibold mb-4">
-                  Upload Product Images *
+                  {t('product.uploadProductImages')} *
                 </h4>
 
                 <p className="text-sm text-gray-600 mb-4">
-                  Drag and drop images or click to browse.
+                  {t('product.dragDropImages')}
                 </p>
 
                 <ImageUploadDropzone
@@ -722,7 +724,7 @@ export default function ProductCreateAllInOne() {
                 {productImages.length > 0 && (
                   <div className="mt-6">
                     <h4 className="text-sm font-medium mb-3">
-                      Uploaded Images ({productImages.length})
+                      {t('product.uploadedImages')} ({productImages.length})
                     </h4>
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                       {productImages.map((img) => (
@@ -746,14 +748,14 @@ export default function ProductCreateAllInOne() {
                               className="text-xs bg-white text-black px-2 py-1 rounded hover:bg-gray-200"
                               title="Set as primary"
                             >
-                              {img.isPrimary ? "✓ Primary" : "Set Primary"}
+                              {img.isPrimary ? t('product.primary') : t('product.setPrimary')}
                             </button>
                             <button
                               type="button"
                               onClick={() => removeImage(img.id!)}
                               className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
                             >
-                              Remove
+                              {t('product.remove')}
                             </button>
                           </div>
                         </div>
@@ -771,7 +773,7 @@ export default function ProductCreateAllInOne() {
                   onClick={() => setCurrentStep("variants")}
                   className="bg-indigo-600"
                 >
-                  {loading ? "Processing..." : "Next: Create Variants"}
+                  {loading ? t('product.processing') : t('product.nextCreateVariants')}
                 </Button>
               </div>
             </div>
@@ -781,13 +783,12 @@ export default function ProductCreateAllInOne() {
           {currentStep === "variants" && (
             <div>
               <h3 className="text-lg font-semibold mb-4">
-                Step 2: Add Product Variants
+                {t('product.step2Title')}
               </h3>
 
               <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-gray-600">
-                  Add variants for your product. Each variant can have different
-                  price, weight, and stock quantity.
+                  {t('product.addVariantsInfo')}
                 </p>
                 <Button
                   size="sm"
@@ -795,7 +796,7 @@ export default function ProductCreateAllInOne() {
                   onClick={addVariant}
                   className="bg-indigo-600 hover:bg-indigo-700"
                 >
-                  + Add Variant
+                  {t('product.addVariant')}
                 </Button>
               </div>
 
@@ -894,7 +895,7 @@ export default function ProductCreateAllInOne() {
 
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Stock Quantity{" "}
+                            {t('product.stockQuantity')}{" "}
                             <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -1017,27 +1018,27 @@ export default function ProductCreateAllInOne() {
           {currentStep === "review" && (
             <div>
               <h3 className="text-lg font-semibold mb-4">
-                Step 3: Review & Submit
+                {t('product.step3Title')}
               </h3>
 
               <div className="space-y-4 bg-gray-50 p-4 rounded-lg mb-6">
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Product Name:
+                    {t('product.productName')}:
                   </span>
                   <p className="text-gray-900">{name}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Category ID:
+                    {t('product.category')}:
                   </span>
                   <p className="text-gray-900">{categoryName}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Featured:
+                    {t('product.featured')}:
                   </span>
-                  <p className="text-gray-900">{featured ? "Yes" : "No"}</p>
+                  <p className="text-gray-900">{featured ? t('product.yes') : t('product.no')}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
@@ -1055,15 +1056,15 @@ export default function ProductCreateAllInOne() {
 
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Images:
+                    {t('product.productImages')}:
                   </span>
-                  <p className="text-gray-900">{productImages.length} images</p>
+                  <p className="text-gray-900">{productImages.length} {t('product.images')}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Variants:
+                    {t('product.productVariants')}:
                   </span>
-                  <p className="text-gray-900">{variants.length} variants</p>
+                  <p className="text-gray-900">{variants.length} {t('product.variants')}</p>
                 </div>
               </div>
 
@@ -1073,11 +1074,11 @@ export default function ProductCreateAllInOne() {
                   <thead>
                     <tr className="bg-gray-100 border-b">
                       <th className="border px-3 py-2 text-left">
-                        Variant Name
+                        {t('product.variantName')}
                       </th>
-                      <th className="border px-3 py-2 text-right">Price</th>
+                      <th className="border px-3 py-2 text-right">{t('product.price')}</th>
                       <th className="border px-3 py-2 text-right">
-                        Weight (kg)
+                        {t('product.weight')} (kg)
                       </th>
                       <th className="border px-3 py-2 text-right">Stock</th>
                       <th className="border px-3 py-2 text-center">Images</th>

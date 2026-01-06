@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
 import Select from "../../components/form/Select";
-import petApi, { UpdatePetPayload } from "../../services/api/petApi";
+import petApi, { UpdatePetPayload, PetImage } from "../../services/api/petApi";
+import ImageUploadDropzone from "../../components/Product/ImageUploadDropzone";
 
 export default function PetEdit() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -23,6 +26,12 @@ export default function PetEdit() {
   const [neutered, setNeutered] = useState<boolean>(false);
   const [isDeleted, setIsDeleted] = useState<string>("0");
 
+  // Image upload state
+  const [petImages, setPetImages] = useState<PetImage[]>([]);
+  // Keep track of original images to calculate deletions
+  const [originalImages, setOriginalImages] = useState<PetImage[]>([]);
+  const [uploadingImages, setUploadingImages] = useState<boolean>(false);
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -38,6 +47,19 @@ export default function PetEdit() {
   const genderOptions = [
     { value: "Male", label: "Male" },
     { value: "Female", label: "Female" },
+  ];
+
+  const animalOptions = [
+    { value: "DOG", label: "Dog" },
+    { value: "CAT", label: "Cat" },
+    { value: "BIRD", label: "Bird" },
+    { value: "RABBIT", label: "Rabbit" },
+    { value: "OTHER", label: "Other" },
+  ];
+
+  const healthStatusOptions = [
+    { value: "BAD", label: "Bad" },
+    { value: "GOOD", label: "Good" },
   ];
 
   useEffect(() => {
@@ -75,6 +97,24 @@ export default function PetEdit() {
             neuteredRaw === true || neuteredRaw === 1 || neuteredRaw === "1"
           );
           setIsDeleted(data.isDeleted || "0");
+
+          // Set images if available, sorting by position (null check just in case)
+          // Handle potential different casing from API (snake_case vs camelCase)
+          if (data.images && Array.isArray(data.images)) {
+            const imgs = data.images.map((img: any) => ({
+              id: img.id, // Important for tracking existing vs new
+              imageUrl: img.imageUrl || img.image_url || img.url || "",
+              publicId: img.publicId || img.public_id || String(Math.random()),
+              isPrimary: !!(img.isPrimary || img.is_primary),
+              imagePosition: Number(img.imagePosition || img.image_position || 0)
+            }))
+              .filter((img: any) => img.imageUrl) // Filter out invalid images
+              .sort((a: any, b: any) => a.imagePosition - b.imagePosition);
+
+            console.log("Loaded images:", imgs);
+            setPetImages(imgs);
+            setOriginalImages(imgs); // Store original state
+          }
         }
       } catch (err: any) {
         setError(err?.message || "Failed to load pet");
@@ -102,12 +142,117 @@ export default function PetEdit() {
     }
   };
 
+  // ==================== Image Upload Logic ====================
+
+  const handleImageUpload = useCallback(
+    async (files: File[]) => {
+      if (!files || files.length === 0) {
+        return;
+      }
+
+      setUploadingImages(true);
+
+
+      try {
+        console.log(`Uploading ${files.length} images to Cloudinary...`);
+
+        const CLOUDINARY_CLOUD_NAME =
+          import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "di2a8fvuv";
+        const CLOUDINARY_UPLOAD_PRESET =
+          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+
+        if (!CLOUDINARY_UPLOAD_PRESET) {
+          throw new Error(
+            "Upload preset is not configured. Please set VITE_CLOUDINARY_UPLOAD_PRESET in your .env file."
+          );
+        }
+
+        const uploadPromises = files.map((file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+          return fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          )
+            .then((res) => {
+              if (!res.ok) {
+                return res.json().then((errorData) => {
+                  throw new Error(
+                    errorData.error?.message ||
+                    `Cloudinary upload failed with status ${res.status}`
+                  );
+                });
+              }
+              return res.json();
+            })
+            .then((data) => {
+              if (!data.secure_url || !data.public_id) {
+                throw new Error(
+                  "Invalid response from Cloudinary - missing secure_url or public_id"
+                );
+              }
+              return {
+                secure_url: data.secure_url,
+                public_id: data.public_id,
+              };
+            });
+        });
+
+        const uploadResults = await Promise.all(uploadPromises);
+
+        // Append new images.
+        // If there were no images before, the first one is primary.
+        const startPosition = petImages.length + 1;
+        const newImages: PetImage[] = uploadResults.map(
+          (
+            result: { secure_url: string; public_id: string },
+            index: number
+          ) => ({
+            imageUrl: result.secure_url,
+            publicId: result.public_id,
+            isPrimary: petImages.length === 0 && index === 0,
+            imagePosition: startPosition + index,
+          })
+        );
+
+        setPetImages((prev) => [...prev, ...newImages]);
+        setMessage(`Successfully uploaded ${uploadResults.length} image(s)`);
+      } catch (err: any) {
+        console.error("Image upload exception:", err);
+        setError(err.message || "Image upload failed");
+      } finally {
+        setUploadingImages(false);
+      }
+    },
+    [petImages.length]
+  );
+
+  const removeImage = (publicId: string) => {
+    setPetImages((prev) => prev.filter((img) => img.publicId !== publicId));
+  };
+
+  const setPrimaryImage = (publicId: string) => {
+    setPetImages((prev) =>
+      prev.map((img) => ({
+        ...img,
+        isPrimary: img.publicId === publicId,
+      }))
+    );
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!id) {
       setError("Pet ID is missing");
       return;
     }
+
     const numericId = parseInt(id, 10);
     if (isNaN(numericId)) {
       setError("Invalid pet ID");
@@ -124,6 +269,42 @@ export default function PetEdit() {
     setMessage(null);
 
     try {
+      // ===============================
+      // 1️⃣ XÁC ĐỊNH ẢNH BỊ XOÁ
+      // ===============================
+      const currentImageIds = new Set(
+        petImages
+          .map((img) => img.id)
+          .filter((id): id is number => id !== undefined)
+      );
+
+      const deletedImageIds = originalImages
+        .filter(
+          (img) => img.id !== undefined && !currentImageIds.has(img.id)
+        )
+        .map((img) => img.id!);
+
+      // ===============================
+      // 2️⃣ LẤY ẢNH MỚI (KHÔNG CÓ ID)
+      // ===============================
+      const newImages = petImages
+        .filter((img) => !img.id)
+        .map((img, index) => ({
+          imageUrl: img.imageUrl,
+          publicId: img.publicId,
+          isPrimary: img.isPrimary,
+          imagePosition: index,
+        }));
+
+      // ===============================
+      // 2.5️⃣ TÌM ẢNH PRIMARY (CÓ ID)
+      // ===============================
+      const primaryExistingImage = petImages.find((img) => img.id && img.isPrimary);
+      const primaryImageId = primaryExistingImage?.id;
+
+      // ===============================
+      // 3️⃣ PAYLOAD UPDATE
+      // ===============================
       const payload: UpdatePetPayload = {
         name,
         animal,
@@ -137,17 +318,22 @@ export default function PetEdit() {
         vaccinated: vaccinated ? "1" : "0",
         neutered: neutered ? "1" : "0",
         isDeleted,
+
+        deletedImageIds,
+        images: newImages, // ❗ chỉ gửi ảnh mới
+        primaryImageId, // ❗ ID ảnh primary (nếu là ảnh đã có sẵn)
       };
 
       const res = await petApi.updatePet(numericId, payload);
       const data = res?.data;
+
       if (data?.success || data?.code === 1000) {
         setMessage("Update pet successfully");
         setTimeout(() => {
           navigate("/pet/list");
-        }, 1500);
+        }, 1200);
       } else {
-        setError(data?.message || "Unknown response");
+        setError(data?.message || "Update failed");
       }
     } catch (err: any) {
       setError(err?.message || "Failed to update pet");
@@ -156,13 +342,14 @@ export default function PetEdit() {
     }
   };
 
+
   if (loadingData) {
     return (
       <>
         <PageMeta title="Edit Pet" description="Edit pet information" />
         <div className="p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="flex h-[50vh] w-full items-center justify-center">
+            <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-indigo-600 border-t-transparent"></div>
           </div>
         </div>
       </>
@@ -173,8 +360,8 @@ export default function PetEdit() {
     <>
       <PageMeta title="Edit Pet" description="Edit pet information" />
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Edit Pet</h2>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-[26px] font-bold leading-[30px] text-dark dark:text-white">Edit Pet</h2>
           <Button
             size="sm"
             variant="outline"
@@ -184,7 +371,7 @@ export default function PetEdit() {
           </Button>
         </div>
 
-        <form onSubmit={submit} className="bg-white border rounded-lg p-6">
+        <form onSubmit={submit} className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
           {error && (
             <div className="mb-3">
               <Alert variant="error" title="Error" message={error} />
@@ -196,57 +383,57 @@ export default function PetEdit() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Pet Name</label>
+          <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
+            <div className="w-full xl:w-1/2">
+              <label className="mb-2.5 block text-black dark:text-white">Pet Name</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600"
                 placeholder="Enter pet name"
               />
             </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">
+            <div className="w-full xl:w-1/2">
+              <label className="mb-2.5 block text-black dark:text-white">
                 Animal Type
               </label>
-              <input
+              <Select
+                options={animalOptions}
                 value={animal}
-                onChange={(e) => setAnimal(e.target.value)}
+                onChange={(val) => setAnimal(val)}
+                placeholder="Select Animal"
                 required
-                className="w-full border rounded px-3 py-2"
-                placeholder="Dog / Cat / Bird..."
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Breed</label>
+          <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
+            <div className="w-full xl:w-1/2">
+              <label className="mb-2.5 block text-black dark:text-white">Breed</label>
               <input
                 value={breed}
                 onChange={(e) => setBreed(e.target.value)}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600"
                 placeholder="Enter breed"
               />
             </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Age</label>
+            <div className="w-full xl:w-1/2">
+              <label className="mb-2.5 block text-black dark:text-white">Age</label>
               <input
                 type="number"
                 value={age}
                 onChange={handleAgeChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600"
                 placeholder="Enter age"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="mb-4.5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="mb-2.5 block text-black dark:text-white">
                 Age Group
               </label>
               <Select
@@ -257,7 +444,7 @@ export default function PetEdit() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
+              <label className="mb-2.5 block text-black dark:text-white">Weight (kg)</label>
               <input
                 type="number"
                 min="0"
@@ -269,12 +456,12 @@ export default function PetEdit() {
                     setWeight(val);
                   }
                 }}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600"
                 placeholder="Enter weight"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Gender</label>
+              <label className="mb-2.5 block text-black dark:text-white">Gender</label>
               <Select
                 options={genderOptions}
                 value={gender}
@@ -285,27 +472,27 @@ export default function PetEdit() {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-600 mb-1">
+            <label className="mb-2.5 block text-black dark:text-white">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full border rounded px-3 py-2 h-32"
+              className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600 h-32"
               placeholder="Description"
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="mb-2.5 block text-black dark:text-white">
                 Health Status
               </label>
-              <input
+              <Select
+                options={healthStatusOptions}
                 value={healthStatus}
-                onChange={(e) => setHealthStatus(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                placeholder="Good, etc."
+                onChange={(val) => setHealthStatus(val)}
+                placeholder="Select Health Status"
               />
             </div>
             <div className="flex items-center gap-6 mt-6 md:mt-8">
@@ -314,7 +501,7 @@ export default function PetEdit() {
                   type="checkbox"
                   checked={vaccinated}
                   onChange={(e) => setVaccinated(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                 />
                 Vaccinated
               </label>
@@ -323,33 +510,87 @@ export default function PetEdit() {
                   type="checkbox"
                   checked={neutered}
                   onChange={(e) => setNeutered(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                 />
                 Neutered
               </label>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Status</label>
+          <div className="form-grid-2 mt-4">
+            <div className="w-full xl:w-1/2">
+              <label className="mb-2.5 block text-black dark:text-white">Status</label>
               <select
                 value={isDeleted}
                 onChange={(e) => setIsDeleted(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600 active:border-indigo-600 dark:border-form-strokedark dark:bg-form-input dark:focus:border-indigo-600"
               >
-                <option value="0">Active</option>
-                <option value="1">Deleted</option>
+                <option value="0">False</option>
+                <option value="1">True</option>
               </select>
             </div>
           </div>
 
-          <div className="mt-6 flex items-center gap-3">
+          {/* Image Upload */}
+          <div className="mt-4">
+            <label className="mb-2.5 block text-black dark:text-white">
+              Pet Images
+            </label>
+            <ImageUploadDropzone
+              onImagesDrop={handleImageUpload}
+              isLoading={uploadingImages}
+            />
+
+            {/* Image Preview List */}
+            {petImages.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {petImages.map((img, index) => (
+                  <div
+                    key={img.publicId}
+                    className={`relative overflow-hidden rounded-lg border ${img.isPrimary ? 'border-indigo-600 ring-2 ring-indigo-600/50' : 'border-gray-200 dark:border-gray-700'}`}
+                  >
+                    <img
+                      src={img.imageUrl}
+                      alt={`Pet ${index + 1}`}
+                      className="h-32 w-full object-cover"
+                    />
+                    <div className="absolute top-1 right-1">
+                      <button
+                        type="button"
+                        onClick={() => removeImage(img.publicId)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 shadow-md transition-all"
+                        title="Remove Image"
+                      >
+                        <span className="text-lg leading-none mb-0.5">&times;</span>
+                      </button>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-center backdrop-blur-sm">
+                      {img.isPrimary ? (
+                        <span className="text-xs font-semibold text-white">
+                          Primary
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPrimaryImage(img.publicId)}
+                          className="text-xs text-white hover:underline hover:text-indigo-200 transition-colors"
+                        >
+                          Set Primary
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex gap-4">
             <Button
               size="md"
               type="submit"
               disabled={loading}
-              className="bg-indigo-600"
+              className="bg-indigo-600 hover:bg-indigo-700"
             >
               {loading ? "Saving..." : "Save Changes"}
             </Button>

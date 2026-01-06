@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
@@ -7,6 +8,7 @@ import Select from "../../components/form/Select";
 import categoryApi from "../../services/api/categoryApi";
 
 export default function ProductAdd() {
+  const { t } = useTranslation();
   const [categoryId, setCategoryId] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [shortDescription, setShortDescription] = useState<string>("");
@@ -49,13 +51,13 @@ export default function ProductAdd() {
       const res = await productApi.create(payload);
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
-        setMessage("Create product successfully");
+        setMessage(t('product.createSuccess'));
         reset();
       } else {
-        setError(data?.message || "Unknown response");
+        setError(data?.message || t('messages.unknownResponse'));
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to create product");
+      setError(err?.message || t('product.createError'));
     } finally {
       setLoading(false);
     }
@@ -107,19 +109,19 @@ export default function ProductAdd() {
 
   return (
     <>
-      <PageMeta title="Add Product" description="Create a new product" />
+      <PageMeta title={t('product.addProduct')} description={t('product.addProductDescription')} />
       <div className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Add Product</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('product.addProduct')}</h2>
 
         <form onSubmit={submit} className="bg-white border rounded-lg p-6">
           {error && (
             <div className="mb-3">
-              <Alert variant="error" title="Error" message={error} />
+              <Alert variant="error" title={t('common.error')} message={error} />
             </div>
           )}
           {message && (
             <div className="mb-3">
-              <Alert variant="success" title="Success" message={message} />
+              <Alert variant="success" title={t('common.success')} message={message} />
             </div>
           )}
 
@@ -132,7 +134,7 @@ export default function ProductAdd() {
                 <Select
                   options={catOptions}
                   placeholder={
-                    catLoading ? "Loading categories..." : "Select a category"
+                    catLoading ? t('product.loadingCategories') : t('product.selectCategory')
                   }
                   onChange={(val) => setCategoryId(val)}
                   className=""
@@ -147,58 +149,58 @@ export default function ProductAdd() {
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Name</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('product.productName')}</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full border rounded px-3 py-2"
-                placeholder="Enter product name"
+                placeholder={t('product.enterProductName')}
               />
             </div>
           </div>
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Short Description
+              {t('product.shortDescription')}
             </label>
             <input
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
               className="w-full border rounded px-3 py-2"
-              placeholder="Short description"
+              placeholder={t('product.enterShortDescription')}
             />
           </div>
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Description
+              {t('common.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
-              placeholder="Description"
+              placeholder={t('common.enterDescription')}
             />
           </div>
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">Animal</label>
             <textarea
-              value={description}
+              value={animal}
               onChange={(e) => setAnimal(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
-              placeholder="Animal"
+              placeholder={t('product.animalType')}
             />
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-600 mb-1">Brand</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('product.brand')}</label>
             <textarea
-              value={description}
+              value={brand}
               onChange={(e) => setBrand(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
-              placeholder="Branch"
+              placeholder={t('product.brandName')}
             />
           </div>
 
@@ -211,10 +213,10 @@ export default function ProductAdd() {
               disabled={loading}
               className="bg-indigo-600"
             >
-              {loading ? "Saving..." : "Save"}
+              {loading ? t('common.saving') : t('common.save')}
             </Button>
             <Button size="md" variant="outline" type="button" onClick={reset}>
-              Reset
+              {t('common.reset')}
             </Button>
           </div>
         </form>

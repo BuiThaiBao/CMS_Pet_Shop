@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as XLSX from "xlsx";
 import PageMeta from "../../components/common/PageMeta";
 import {
@@ -62,6 +63,7 @@ const getMonthRange = () => {
 };
 
 export default function Report() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<ReportType | null>(null);
   const [message, setMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<ReportType | null>(null);
@@ -570,14 +572,14 @@ export default function Report() {
               onClick={() => setShowModal(null)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
             >
-              Hủy
+              {t('common.cancel')}
             </button>
             <button
               onClick={report.action}
               disabled={loading !== null}
               className="flex-1 px-4 py-2 bg-blue-600 rounded-lg text-white font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? "Đang xuất..." : "📥 Xuất Excel"}
+              {loading ? t('dashboard.exporting') : `📥 ${t('dashboard.exportExcel')}`}
             </button>
           </div>
         </div>
@@ -588,8 +590,8 @@ export default function Report() {
   return (
     <>
       <PageMeta
-        title="Xuất báo cáo Excel | PetShop CMS"
-        description="Xuất các báo cáo thống kê ra file Excel"
+        title={t('dashboard.reportTitle')}
+        description={t('dashboard.reportDescription')}
       />
 
       <div className="space-y-6">
@@ -629,8 +631,6 @@ export default function Report() {
                 className={`w-full px-4 py-2 rounded-lg text-white font-medium transition ${
                   loading === report.id
                     ? "bg-gray-400 cursor-wait"
-                    : report.id === "all"
-                    ? "bg-green-600 hover:bg-green-700"
                     : "bg-blue-600 hover:bg-blue-700"
                 } disabled:opacity-50`}
               >
@@ -643,7 +643,7 @@ export default function Report() {
                     Đang xuất...
                   </span>
                 ) : (
-                  <>📥 Xuất Excel</>
+                  <>📥 {t('dashboard.exportExcel')}</>
                 )}
               </button>
             </div>

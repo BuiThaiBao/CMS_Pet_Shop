@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // Assume these icons are imported from an icon library
 import {
-  BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
   PlugInIcon,
-  TableIcon,
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -28,10 +24,10 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
+    name: "nav.dashboard",
     subItems: [
-      { name: "Ecommerce", path: "/", pro: false },
-      { name: "Report", path: "/report", pro: false, new: true },
+      { name: "nav.dashboard", path: "/", pro: false },
+      { name: "nav.report", path: "/report", pro: false },
     ],
   },
   {
@@ -45,105 +41,65 @@ const navItems: NavItem[] = [
 
   {
     icon: <GridIcon />,
-    name: "Category",
+    name: "nav.category",
     subItems: [
-      { name: "Category List", path: "/category" },
-      { name: "Add Category", path: "/category/add" },
+      { name: "category.categoryList", path: "/category" },
+      { name: "category.addCategory", path: "/category/add" },
     ],
   },
   {
     icon: <GridIcon />,
-    name: "Product",
+    name: "nav.product",
     subItems: [
-      { name: "Product List", path: "/product" },
-      { name: "Add Product", path: "/product/add" },
-      { name: "Add Product (All-in-One)", path: "/product/add-all-in-one" },
+      { name: "product.productList", path: "/product" },
+      { name: "product.addProduct", path: "/product/add" },
+      { name: "product.addAllInOne", path: "/product/add-all-in-one" },
     ],
   },
   {
     icon: <GridIcon />,
-    name: "Pet",
+    name: "nav.pet",
     subItems: [
-      { name: "Pet List", path: "/pet/list" },
-      { name: "Add Pet", path: "/pet/add" },
-      { name: "Adopts", path: "/adopt" },
+      { name: "pet.petList", path: "/pet/list" },
+      { name: "pet.addPet", path: "/pet/add" },
+      { name: "nav.adopt", path: "/adopt" },
     ],
   },
   {
     icon: <GridIcon />,
-    name: "Service",
+    name: "nav.service",
     subItems: [
-      { name: "Service List", path: "/service" },
-      { name: "Add Service", path: "/service/add" },
+      { name: "service.serviceList", path: "/service" },
+      { name: "service.addService", path: "/service/add" },
     ],
   },
   {
     icon: <GridIcon />,
-    name: "Order",
+    name: "nav.orders",
     subItems: [
-      { name: "Order List", path: "/orders" },
-      // nếu sau này có
-      // { name: "Order Detail", path: "/order/:id" },
+      { name: "order.orderList", path: "/orders" },
     ],
   },
-
   {
     icon: <UserCircleIcon />,
-    name: "User Profile",
+    name: "nav.profile",
     path: "/profile",
-  },
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
   },
 ];
 
 const othersItems: NavItem[] = [
   {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
     icon: <PlugInIcon />,
-    name: "Authentication",
+    name: "sidebar.authentication",
     subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
+      { name: "auth.signIn", path: "/signin", pro: false },
+      { name: "auth.signUp", path: "/signup", pro: false },
     ],
   },
 ];
 
 const AppSidebar: React.FC = () => {
+  const { t } = useTranslation();
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
@@ -235,7 +191,7 @@ const AppSidebar: React.FC = () => {
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
+                <span className="menu-item-text">{t(nav.name)}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
@@ -263,7 +219,7 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="menu-item-text">{t(nav.name)}</span>
                 )}
               </Link>
             )
@@ -291,7 +247,7 @@ const AppSidebar: React.FC = () => {
                           : "menu-dropdown-item-inactive"
                         }`}
                     >
-                      {subItem.name}
+                      {t(subItem.name)}
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
@@ -382,7 +338,7 @@ const AppSidebar: React.FC = () => {
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  t("sidebar.menu")
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -397,7 +353,7 @@ const AppSidebar: React.FC = () => {
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
+                  t("sidebar.others")
                 ) : (
                   <HorizontaLDots />
                 )}

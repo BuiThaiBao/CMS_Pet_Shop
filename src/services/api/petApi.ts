@@ -1,6 +1,7 @@
 import http from "./http";
 
 export interface PetImage {
+  id?: number; // DB ID
   imageUrl: string;
   publicId: string;
   isPrimary: boolean;
@@ -35,6 +36,11 @@ export interface UpdatePetPayload {
   vaccinated?: string;
   neutered?: string;
   isDeleted?: string;
+
+  // New fields for backend compatibility
+  deletedImageIds?: number[];
+  images?: PetImage[]; // New images only
+  primaryImageId?: number; // ID of existing image to set as primary
 }
 
 const petApi = {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Select from "../../components/form/Select";
@@ -62,6 +63,7 @@ const BULK_BUTTON_STYLE: Record<OrderStatus, string> = {
 /* ================= PAGE ================= */
 
 export default function OrderPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState<Order[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
@@ -127,7 +129,7 @@ export default function OrderPage() {
       }
     } catch (err: any) {
       if (err?.name === "CanceledError") return;
-      setError(err?.message || "Failed to fetch orders");
+      setError(err?.message || t('messages.loadError'));
     } finally {
       setLoading(false);
     }
@@ -182,7 +184,7 @@ export default function OrderPage() {
       setSelectedIds([]);
       fetchOrders();
     } catch (err: any) {
-      alert(err?.message || "Update failed");
+      alert(err?.message || t('messages.updateError'));
     } finally {
       setUpdating(false);
     }
@@ -201,14 +203,14 @@ export default function OrderPage() {
 
   return (
     <>
-      <PageMeta title="Order Management" description="Manage orders" />
+      <PageMeta title={t('order.title')} description={t('order.orderList')} />
 
       <div className="p-4">
-        <h1 className="text-xl font-semibold">Order Management</h1>
+        <h1 className="text-xl font-semibold">{t('order.title')}</h1>
 
         {error && (
           <div className="my-4">
-            <Alert variant="error" title="Error" message={error} />
+            <Alert variant="error" title={t('common.error')} message={error} />
           </div>
         )}
 
@@ -218,20 +220,20 @@ export default function OrderPage() {
             type="search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search order code..."
+            placeholder={t('order.searchOrderCode')}
             className="w-64 px-3 py-2 border rounded-lg"
           />
 
           <Select
             value={status}
             options={[
-              { value: "", label: "All Status" },
-              { value: "WAITING_PAYMENT", label: "Waiting Payment" },
-              { value: "PROCESSING", label: "Processing" },
-              { value: "SHIPPED", label: "Shipped" },
-              { value: "DELIVERED", label: "Delivered" },
-              { value: "COMPLETED", label: "Completed" },
-              { value: "CANCELLED", label: "Cancelled" },
+              { value: "", label: t('order.allStatus') },
+              { value: "WAITING_PAYMENT", label: t('order.waitingPayment') },
+              { value: "PROCESSING", label: t('order.processing') },
+              { value: "SHIPPED", label: t('order.shipped') },
+             { value: "DELIVERED", label: t('order.delivered') },
+              { value: "COMPLETED", label: t('order.completed') },
+              { value: "CANCELLED", label: t('order.cancelled') },
             ]}
             onChange={(v) => {
               setStatus(v);
@@ -244,13 +246,13 @@ export default function OrderPage() {
         <div className="my-4 flex items-center gap-3 flex-wrap justify-end">
           {selectedIds.length === 0 && (
             <span className="text-sm text-gray-400">
-              Select orders to update status
+              {t('order.selectToUpdate')}
             </span>
           )}
 
           {selectedIds.length > 0 && !selectedBaseStatus && (
             <span className="text-sm text-red-600">
-              Selected orders must have the same status
+              {t('order.mustSameStatus')}
             </span>
           )}
 
@@ -267,7 +269,7 @@ export default function OrderPage() {
 
           {selectedIds.length > 0 && bulkActionStatuses.length > 0 && (
             <span className="text-sm text-gray-500 ml-2">
-              ({selectedIds.length} selected)
+              ({selectedIds.length} {t('order.selected')})
             </span>
           )}
         </div>
@@ -290,12 +292,12 @@ export default function OrderPage() {
                     }
                   />
                 </th>
-                <th className="px-4 py-3">Order Code</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Total</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Created At</th>
-                <th className="px-4 py-3">Actions</th>
+                <th className="px-4 py-3">{t('order.orderCode')}</th>
+                <th className="px-4 py-3">{t('order.customer')}</th>
+                <th className="px-4 py-3">{t('order.total')}</th>
+                <th className="px-4 py-3">{t('common.status')}</th>
+                <th className="px-4 py-3">{t('common.createdAt')}</th>
+                <th className="px-4 py-3">{t('common.actions')}</th>
               </tr>
             </thead>
 
@@ -303,13 +305,13 @@ export default function OrderPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="p-6 text-center">
-                    Loading...
+                    {t('common.loading')}
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-6 text-center text-gray-500">
-                    No orders found
+                    {t('order.noOrders')}
                   </td>
                 </tr>
               ) : (
@@ -348,7 +350,7 @@ export default function OrderPage() {
                           STATUS_STYLE[o.status]
                         }`}
                       >
-                        {o.status}
+                        {t(`order.${o.status.toLowerCase()}`)}
                       </span>
                     </td>
 
@@ -361,7 +363,7 @@ export default function OrderPage() {
                         onClick={() => navigate(`/orders/${o.id}`)}
                         className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
                       >
-                        View Details
+                        {t('order.viewDetails')}
                       </button>
                     </td>
                   </tr>
@@ -375,8 +377,8 @@ export default function OrderPage() {
         {totalPages > 0 && (
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {Math.min((pageNumber - 1) * pageSize + 1, totalElements)} to{" "}
-              {Math.min(pageNumber * pageSize, totalElements)} of {totalElements} orders
+              {t('common.showing')} {Math.min((pageNumber - 1) * pageSize + 1, totalElements)} {t('common.to')}{" "}
+              {Math.min(pageNumber * pageSize, totalElements)} {t('common.of')} {totalElements} {t('order.orders')}
             </div>
 
             <div className="flex items-center gap-2">
@@ -385,7 +387,7 @@ export default function OrderPage() {
                 disabled={pageNumber === 1}
                 className="px-3 py-2 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Previous
+                {t('common.previous')}
               </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
@@ -426,7 +428,7 @@ export default function OrderPage() {
                 disabled={pageNumber === totalPages}
                 className="px-3 py-2 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Next
+                {t('common.next')}
               </button>
             </div>
           </div>

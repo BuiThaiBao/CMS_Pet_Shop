@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Alert from "../../components/ui/alert/Alert";
 import Switch from "../../components/form/switch/Switch";
@@ -28,6 +29,7 @@ type ServiceItem = {
 };
 
 function Service() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -132,7 +134,7 @@ function Service() {
         return;
       }
       console.error(err);
-      setError(err?.message || "Failed to fetch services");
+      setError(err?.message || t('messages.loadError'));
     } finally {
       setLoading(false);
       abortRef.current = null;
@@ -165,7 +167,7 @@ function Service() {
       await serviceApi.update(id, payload);
     } catch (err: any) {
       setItems(prevItems);
-      setError(err?.message || "Failed to update service");
+      setError(err?.message || t('service.updateError'));
     } finally {
       const after = new Set(updatingIds);
       after.delete(id);
@@ -311,7 +313,7 @@ function Service() {
     } catch (err: any) {
       // Revert on error
       setItems(prevItems);
-      setError(err?.message || "Failed to update booking time status");
+      setError(err?.message || t('service.updateTimeSlotError'));
     } finally {
       const after = new Set(updatingBookingTimes);
       after.delete(key);
@@ -321,32 +323,32 @@ function Service() {
 
   return (
     <>
-      <PageMeta title="Service" description="Service list" />
+      <PageMeta title={t('service.title')} description={t('service.serviceList')} />
       <div className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Service List</h1>
-            <p className="mt-2 text-sm text-gray-600">Manage services</p>
+            <h1 className="text-xl font-semibold">{t('service.serviceList')}</h1>
+            <p className="mt-2 text-sm text-gray-600">{t('service.manageServices')}</p>
           </div>
           <Button
             onClick={() => navigate("/service/add")}
             size="md"
             className="bg-indigo-600"
           >
-            + Add Service
+            + {t('service.addService')}
           </Button>
         </div>
         <div className="mt-4 bg-white rounded-lg border">
           {error && (
             <div className="p-4">
-              <Alert variant="error" title="Error" message={error} />
+              <Alert variant="error" title={t('common.error')} message={error} />
             </div>
           )}
           <div className="p-4 border-b">
             <div className="flex items-center gap-3">
               <input
                 type="text"
-                placeholder="Search by name..."
+                placeholder={t('service.searchByName')}
                 className="border rounded px-3 py-2 flex-1"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -366,31 +368,31 @@ function Service() {
                         onClick={toggleSort}
                         className="flex items-center gap-1 hover:text-gray-700"
                       >
-                        Name
+                        {t('service.serviceName')}
                         {sortDirection === "asc" && <span>↑</span>}
                         {sortDirection === "desc" && <span>↓</span>}
                       </button>
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Title
+                      {t('service.title')}
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Description
+                      {t('common.description')}
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Duration (min)
+                      {t('service.duration')} (min)
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Price
+                      {t('service.price')}
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Time Slots
+                      {t('service.timeSlots')}
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
+                      {t('common.status')}
                     </th>
                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                      Actions
+                      {t('common.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -409,7 +411,7 @@ function Service() {
                         colSpan={8}
                         className="py-8 text-center text-gray-500"
                       >
-                        No services found
+                        {t('service.noServices')}
                       </td>
                     </tr>
                   ) : (
@@ -443,8 +445,7 @@ function Service() {
                                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors dropdown-toggle"
                               >
                                 <span>
-                                  {s.timeTemplates.length} time slot
-                                  {s.timeTemplates.length > 1 ? "s" : ""}
+                                  {s.timeTemplates.length} {t('service.timeSlot')}
                                 </span>
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -472,7 +473,7 @@ function Service() {
                                 <div className="py-2">
                                   <div className="px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
                                     <span className="text-xs font-semibold text-gray-500 uppercase">
-                                      Time Slots
+                                      {t('service.timeSlots')}
                                     </span>
                                     <button
                                       type="button"
@@ -482,7 +483,7 @@ function Service() {
                                       }}
                                       className="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
                                     >
-                                      + Add Time
+                                      + {t('service.addTime')}
                                     </button>
                                   </div>
                                   {showAddTimeForm === s.id && (
@@ -494,7 +495,7 @@ function Service() {
                                         <div className="flex items-center gap-2">
                                           <div className="flex-1">
                                             <label className="block text-xs text-gray-600 mb-1">
-                                              Start Time
+                                              {t('service.startTime')}
                                             </label>
                                             <input
                                               type="text"
@@ -532,7 +533,7 @@ function Service() {
                                           </div>
                                           <div className="w-24">
                                             <label className="block text-xs text-gray-600 mb-1">
-                                              Capacity
+                                              {t('service.capacity')}
                                             </label>
                                             <input
                                               type="number"
@@ -544,7 +545,7 @@ function Service() {
                                                 })
                                               }
                                               className="w-full border rounded px-2 py-1.5 text-sm"
-                                              placeholder="Max"
+                                              placeholder={t('service.max')}
                                               min="1"
                                               aria-label="Max Capacity"
                                               title="Max Capacity"
@@ -559,7 +560,7 @@ function Service() {
                                             disabled={addingTimeSlot === s.id}
                                             className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           >
-                                            {addingTimeSlot === s.id ? "Adding..." : "Add"}
+                                            {addingTimeSlot === s.id ? t('common.adding') : t('common.add')}
                                           </button>
                                           <button
                                             type="button"
@@ -573,7 +574,7 @@ function Service() {
                                             disabled={addingTimeSlot === s.id}
                                             className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           >
-                                            Cancel
+                                            {t('common.cancel')}
                                           </button>
                                         </div>
                                       </div>
@@ -607,7 +608,7 @@ function Service() {
                                               {formatTime(template.endTime)}
                                             </span>
                                             <span className="text-xs text-gray-500 whitespace-nowrap">
-                                              Capacity: {template.maxCapacity}
+                                              {t('service.capacity')}: {template.maxCapacity}
                                             </span>
                                           </div>
                                           <div
@@ -634,7 +635,7 @@ function Service() {
                                                 : "text-red-600"
                                                 }`}
                                             >
-                                              {isActive ? "Active" : "Inactive"}
+                                              {isActive ? t('common.active') : t('service.inactive')}
                                             </span>
                                           </div>
                                         </div>
@@ -670,7 +671,7 @@ function Service() {
                                 : "text-red-600"
                                 }`}
                             >
-                              {s.isActive === "1" ? "Active" : "Inactive"}
+                              {s.isActive === "1" ? t('common.active') : t('service.inactive')}
                             </span>
                           </div>
                         </td>
@@ -704,7 +705,7 @@ function Service() {
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
-                            Edit
+                            {t('common.edit')}
                           </button>
                         </td>
                       </tr>
@@ -716,7 +717,7 @@ function Service() {
           </div>
           <div className="p-4 border-t flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {items.length} of {totalElements} services
+              {t('common.showing')} {items.length} {t('common.of')} {totalElements} {t('service.services')}
             </div>
 
             <div className="flex items-center gap-3 ml-auto">

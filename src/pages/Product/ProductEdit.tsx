@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
@@ -8,6 +9,7 @@ import Select from "../../components/form/Select";
 import categoryApi from "../../services/api/categoryApi";
 
 export default function ProductEdit() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -46,7 +48,7 @@ export default function ProductEdit() {
           setIsDeleted(data.isDeleted || "0");
         }
       } catch (err: any) {
-        setError(err?.message || "Failed to load product");
+        setError(err?.message || t('messages.loadError'));
       } finally {
         setLoadingData(false);
       }
@@ -115,15 +117,15 @@ export default function ProductEdit() {
       const res = await productApi.update(id, payload);
       const data = res?.data;
       if (data?.success || data?.code === 1000) {
-        setMessage("Update product successfully");
+        setMessage(t('product.updateSuccess'));
         setTimeout(() => {
           navigate("/product");
         }, 1500);
       } else {
-        setError(data?.message || "Unknown response");
+        setError(data?.message || t('messages.unknownResponse'));
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to update product");
+      setError(err?.message || t('product.updateError'));
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ export default function ProductEdit() {
   if (loadingData) {
     return (
       <>
-        <PageMeta title="Edit Product" description="Edit product information" />
+        <PageMeta title={t('product.editProduct')} description={t('product.editProductDescription')} />
         <div className="p-6">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -144,28 +146,28 @@ export default function ProductEdit() {
 
   return (
     <>
-      <PageMeta title="Edit Product" description="Edit product information" />
+      <PageMeta title={t('product.editProduct')} description={t('product.editProductDescription')} />
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Edit Product</h2>
+          <h2 className="text-lg font-semibold">{t('product.editProduct')}</h2>
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigate("/product")}
           >
-            ← Back to List
+            ← {t('common.backToList')}
           </Button>
         </div>
 
         <form onSubmit={submit} className="bg-white border rounded-lg p-6">
           {error && (
             <div className="mb-3">
-              <Alert variant="error" title="Error" message={error} />
+              <Alert variant="error" title={t('common.error')} message={error} />
             </div>
           )}
           {message && (
             <div className="mb-3">
-              <Alert variant="success" title="Success" message={message} />
+              <Alert variant="success" title={t('common.success')} message={message} />
             </div>
           )}
 
@@ -178,7 +180,7 @@ export default function ProductEdit() {
                 <Select
                   options={catOptions}
                   placeholder={
-                    catLoading ? "Loading categories..." : "Select a category"
+                    catLoading ? t('product.loadingCategories') : t('product.selectCategory')
                   }
                   onChange={(val) => setCategoryId(val)}
                   className=""
@@ -193,64 +195,64 @@ export default function ProductEdit() {
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Name</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('product.productName')}</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full border rounded px-3 py-2"
-                placeholder="Enter product name"
+                placeholder={t('product.enterProductName')}
               />
             </div>
           </div>
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Short Description
+              {t('product.shortDescription')}
             </label>
             <input
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
               className="w-full border rounded px-3 py-2"
-              placeholder="Short description"
+              placeholder={t('product.enterShortDescription')}
             />
           </div>
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Description
+              {t('common.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border rounded px-3 py-2 h-36"
-              placeholder="Description"
+              placeholder={t('common.enterDescription')}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Featured
+                {t('product.featured')}
               </label>
               <select
                 value={isFeatured}
                 onChange={(e) => setIsFeatured(e.target.value)}
                 className="w-full border rounded px-3 py-2"
               >
-                <option value="0">No</option>
-                <option value="1">Yes</option>
+                <option value="0">{t('common.no')}</option>
+                <option value="1">{t('common.yes')}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Status</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('common.status')}</label>
               <select
                 value={isDeleted}
                 onChange={(e) => setIsDeleted(e.target.value)}
                 className="w-full border rounded px-3 py-2"
               >
-                <option value="0">Active</option>
-                <option value="1">Deleted</option>
+                <option value="0">{t('common.active')}</option>
+                <option value="1">{t('common.deleted')}</option>
               </select>
             </div>
           </div>
@@ -262,7 +264,7 @@ export default function ProductEdit() {
               disabled={loading}
               className="bg-indigo-600"
             >
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? t('common.saving') : t('common.saveChanges')}
             </Button>
             <Button
               size="md"
@@ -270,7 +272,7 @@ export default function ProductEdit() {
               type="button"
               onClick={() => navigate("/product")}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           </div>
         </form>
