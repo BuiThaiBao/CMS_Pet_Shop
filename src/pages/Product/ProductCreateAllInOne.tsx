@@ -221,7 +221,7 @@ export default function ProductCreateAllInOne() {
         });
 
         const uploadResults = await Promise.all(uploadPromises);
-        console.log(`Successfully uploaded ${uploadResults.length} images`);
+        console.log(`Tải ảnh ${uploadResults.length} lên thành công`);
 
         const newImages: ProductImage[] = uploadResults.map(
           (
@@ -237,7 +237,7 @@ export default function ProductCreateAllInOne() {
         );
 
         setProductImages((prev) => [...prev, ...newImages]);
-        setMessage(`Successfully uploaded ${uploadResults.length} image(s)`);
+        setMessage(`Tải lên thành công ${uploadResults.length} ảnh`);
       } catch (err: any) {
         console.error("Image upload exception:", err);
         const errorMessage =
@@ -802,9 +802,9 @@ export default function ProductCreateAllInOne() {
 
               {variants.length === 0 ? (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <p className="text-gray-500 mb-2">No variants added yet</p>
+                  <p className="text-gray-500 mb-2">Chưa có biến thể nào</p>
                   <p className="text-sm text-gray-400">
-                    Click "Add Variant" to create your first variant
+                    Nhấn "Thêm biến thể" để tạo biến thể đầu tiên của bạn
                   </p>
                 </div>
               ) : (
@@ -816,7 +816,7 @@ export default function ProductCreateAllInOne() {
                     >
                       <div className="flex justify-between items-center mb-4">
                         <h4 className="font-medium text-gray-700">
-                          Variant #{index + 1}
+                          Biến thể #{index + 1}
                         </h4>
                         <button
                           type="button"
@@ -831,7 +831,7 @@ export default function ProductCreateAllInOne() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Variant Name <span className="text-red-500">*</span>
+                            Tên biến thể <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -849,7 +849,7 @@ export default function ProductCreateAllInOne() {
 
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Price <span className="text-red-500">*</span>
+                            Giá <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="number"
@@ -870,7 +870,7 @@ export default function ProductCreateAllInOne() {
 
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Weight (kg)
+                            Cân nặng (kg)
                           </label>
                           <input
                             type="number"
@@ -932,7 +932,7 @@ export default function ProductCreateAllInOne() {
                       {productImages.length > 0 && (
                         <div className="mt-4">
                           <label className="block text-xs font-medium text-gray-700 mb-2">
-                            Select Images for this Variant (Click to toggle)
+                            Chọn hình ảnh cho biến thể này (Nhấn để chọn)
                           </label>
                           <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                             {productImages.map((img) => {
@@ -981,8 +981,7 @@ export default function ProductCreateAllInOne() {
                           </div>
                           {variant.associatedImageUrls.length > 0 && (
                             <p className="text-xs text-gray-500 mt-2">
-                              {variant.associatedImageUrls.length} image(s)
-                              selected
+                              {variant.associatedImageUrls.length} ảnh được chọn
                             </p>
                           )}
                         </div>
@@ -999,7 +998,7 @@ export default function ProductCreateAllInOne() {
                   variant="outline"
                   onClick={() => setCurrentStep("info")}
                 >
-                  Back
+                  Quay lại
                 </Button>
                 <Button
                   size="md"
@@ -1008,7 +1007,7 @@ export default function ProductCreateAllInOne() {
                   onClick={() => setCurrentStep("review")}
                   className="bg-indigo-600"
                 >
-                  Next: Review & Submit
+                  Tiếp theo
                 </Button>
               </div>
             </div>
@@ -1080,8 +1079,8 @@ export default function ProductCreateAllInOne() {
                       <th className="border px-3 py-2 text-right">
                         {t('product.weight')} (kg)
                       </th>
-                      <th className="border px-3 py-2 text-right">Stock</th>
-                      <th className="border px-3 py-2 text-center">Images</th>
+                      <th className="border px-3 py-2 text-right">Tồn kho</th>
+                      <th className="border px-3 py-2 text-center">Hình ảnh</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1118,7 +1117,7 @@ export default function ProductCreateAllInOne() {
                   variant="outline"
                   onClick={() => setCurrentStep("variants")}
                 >
-                  Back
+                  Quay lại
                 </Button>
                 <Button
                   size="md"
@@ -1126,7 +1125,7 @@ export default function ProductCreateAllInOne() {
                   disabled={loading}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {loading ? "Submitting..." : "Submit & Create Product"}
+                  {loading ? "Đang gửi..." : "Gửi & Tạo sản phẩm"}
                 </Button>
               </div>
             </div>
