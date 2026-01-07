@@ -269,7 +269,7 @@ export default function ServiceEdit() {
 
           <div className="mt-4">
             <label className="block text-sm text-gray-600 mb-1">
-              Description
+              Miêu tả
             </label>
             <textarea
               value={description}
@@ -282,7 +282,7 @@ export default function ServiceEdit() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Duration (minutes)
+                Thời gian (phút)
               </label>
               <input
                 type="number"
@@ -295,7 +295,7 @@ export default function ServiceEdit() {
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">
-                Price (VND)
+                Giá (VNĐ)
               </label>
               <input
                 type="number"
@@ -380,7 +380,7 @@ export default function ServiceEdit() {
                     </div>
                     <div className="flex-1">
                       <label className="block text-sm text-gray-600 mb-1">
-                        Số lượng mới (maxCapacity)
+                        Số lượng mới 
                       </label>
                       <input
                         type="number"
@@ -412,9 +412,7 @@ export default function ServiceEdit() {
                 <p>
                   • Để đổi số lượng: Nhập số lượng mới vào trường "Số lượng mới" (để trống nếu không đổi)
                 </p>
-                <p className="text-xs text-gray-400 mt-2">
-                  Lưu ý: Chỉ hiển thị các khung giờ đang active (isDeleted = 0)
-                </p>
+             
               </div>
             )}
           </div>
@@ -426,7 +424,7 @@ export default function ServiceEdit() {
               disabled={loading}
               className="bg-indigo-600"
             >
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Saving..." : "Lưu thay đổi"}
             </Button>
             <Button
               size="md"
@@ -434,7 +432,7 @@ export default function ServiceEdit() {
               type="button"
               onClick={() => navigate("/service")}
             >
-              Cancel
+              Hủy
             </Button>
           </div>
         </form>
