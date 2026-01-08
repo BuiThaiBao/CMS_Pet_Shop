@@ -436,7 +436,28 @@ export default function ProductEdit() {
               </select>
             </div>
           </div>
-                {/* Variant Add Modal */}
+                
+
+          <div className="mt-6 flex items-center gap-3 flex justify-end">
+            <Button
+              size="md"
+              type="submit"
+              disabled={loading}
+              className="bg-indigo-600 "
+            >
+              {loading ? t('common.saving') : t('common.saveChanges')}
+            </Button>
+            <Button
+              size="md"
+              variant="outline"
+              type="button"
+              onClick={() => navigate("/product")}
+            >
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </form>
+                  {/* Variant Add Modal */}
       {id && (
         <VariantAddModal
           isOpen={isAddVariantModalOpen}
@@ -807,27 +828,6 @@ export default function ProductEdit() {
             )}
           </div>
         </div>
-
-          <div className="mt-6 flex items-center gap-3 flex justify-end">
-            <Button
-              size="md"
-              type="submit"
-              disabled={loading}
-              className="bg-indigo-600 "
-            >
-              {loading ? t('common.saving') : t('common.saveChanges')}
-            </Button>
-            <Button
-              size="md"
-              variant="outline"
-              type="button"
-              onClick={() => navigate("/product")}
-            >
-              {t('common.cancel')}
-            </Button>
-          </div>
-        </form>
-
 
       </div>
     </>

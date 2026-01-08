@@ -249,7 +249,7 @@ export default function OrderDetail() {
 
                 <div>
                   <span className="text-sm text-gray-500">Phí vận chuyển</span>
-                  <p className="font-medium">{orderInfo.shippingAmount.toLocaleString()} đ</p>
+                  <p className="font-medium">{orderInfo.shippingAmount.toLocaleString()} VND</p>
                 </div>
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function OrderDetail() {
               <thead className="border-b bg-gray-50 text-sm text-gray-500">
                 <tr>
                   <th className="px-4 py-3 text-left">Sản phẩm</th>
-                  <th className="px-4 py-3 text-left">Chi tiết biến thể</th>
+                  <th className="px-4 py-3 text-left">Chi tiết loại sản phẩm</th>
                   <th className="px-4 py-3 text-right">Đơn giá</th>
                   <th className="px-4 py-3 text-center">Số lượng</th>
                   <th className="px-4 py-3 text-right">Tổng</th>
@@ -292,20 +292,20 @@ export default function OrderDetail() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">
-                        <p className="text-gray-600">ID biến thể: {item.variantId}</p>
+                        <p className="text-gray-600">ID loại sản phẩm: {item.variantId}</p>
                         <p className="text-gray-600">Tồn kho: {item.stockQuantity}</p>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-right font-medium">
-                      {item.unitPrice.toLocaleString()} đ
+                      {item.unitPrice.toLocaleString()} VND
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span className="inline-block px-3 py-1 bg-gray-100 rounded">
+                      <span className="inline-block px-3 py-1 rounded">
                         {item.quantity}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right font-semibold">
-                      {item.totalPrice.toLocaleString()} đ
+                      {item.totalPrice.toLocaleString()} VND
                     </td>
                   </tr>
                 ))}
@@ -321,19 +321,19 @@ export default function OrderDetail() {
           <div className="max-w-md ml-auto space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Tạm tính</span>
-              <span className="font-medium">{subtotal.toLocaleString()} đ</span>
+              <span className="font-medium">{subtotal.toLocaleString()} VND</span>
             </div>
             
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Vận chuyển</span>
-              <span className="font-medium">{orderInfo.shippingAmount.toLocaleString()} đ</span>
+              <span className="font-medium">{orderInfo.shippingAmount.toLocaleString()} VND</span>
             </div>
             
             <div className="border-t pt-2 mt-2">
               <div className="flex justify-between">
                 <span className="font-semibold">Tổng cộng</span>
                 <span className="font-bold text-lg text-blue-600">
-                  {orderInfo.totalAmount.toLocaleString()} đ
+                  {orderInfo.totalAmount.toLocaleString()} VND
                 </span>
               </div>
             </div>

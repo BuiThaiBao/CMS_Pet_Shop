@@ -101,10 +101,10 @@ export default function AdoptDetail() {
         }
       }
 
-      setToast({ 
-        variant: 'error', 
-        title: 'Lỗi', 
-        message: err?.response?.data?.message || err?.message || 'Cập nhật thất bại' 
+      setToast({
+        variant: 'error',
+        title: 'Lỗi',
+        message: err?.response?.data?.message || err?.message || 'Cập nhật thất bại'
       });
     } finally {
       setUpdating(false);
