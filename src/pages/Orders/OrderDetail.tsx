@@ -15,6 +15,14 @@ type OrderDetailItem = {
   shippingAmount: number;
   totalAmount: number;
   shippingAddress: string;
+  // Address details from address relationship
+  addressId?: number;
+  contactName?: string;
+  phone?: string;
+  detailAddress?: string;
+  ward?: string;
+  state?: string;
+  city?: string;
   orderDate: string;
   orderItemId: number;
   quantity: number;
@@ -242,10 +250,35 @@ export default function OrderDetail() {
               <h2 className="text-lg font-semibold mb-4">Thông tin vận chuyển</h2>
               
               <div className="space-y-3">
-                <div>
-                  <span className="text-sm text-gray-500">Địa chỉ giao hàng</span>
-                  <p className="font-medium">{orderInfo.shippingAddress}</p>
-                </div>
+                {orderInfo.contactName ? (
+                  // Display structured address from address relationship
+                  <>
+                    <div>
+                      <span className="text-sm text-gray-500">Người nhận</span>
+                      <p className="font-medium">{orderInfo.contactName}</p>
+                    </div>
+                    
+                    <div>
+                      <span className="text-sm text-gray-500">Số điện thoại</span>
+                      <p className="font-medium">{orderInfo.phone}</p>
+                    </div>
+                    
+                    <div>
+                      <span className="text-sm text-gray-500">Địa chỉ giao hàng</span>
+                      <p className="font-medium">
+                        {orderInfo.detailAddress}<br/>
+                        {orderInfo.ward}, {orderInfo.state}<br/>
+                        {orderInfo.city}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  // Fallback to shippingAddress string for old orders
+                  <div>
+                    <span className="text-sm text-gray-500">Địa chỉ giao hàng</span>
+                    <p className="font-medium">{orderInfo.shippingAddress}</p>
+                  </div>
+                )}
 
                 <div>
                   <span className="text-sm text-gray-500">Phí vận chuyển</span>
