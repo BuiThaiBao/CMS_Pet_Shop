@@ -411,7 +411,7 @@ export default function Product() {
                         </div>
                       </div>
                     </th>
-                    <th className="py-3 px-4">{t('product.shortDescription')}</th>
+
 
                     <th className="py-3 px-4">{t('product.sold')}</th>
                     <th className="py-3 px-4">{t('product.stock')}</th>
@@ -449,9 +449,6 @@ export default function Product() {
                               ? `• ${t('product.category')}: ${p.categoryName}`
                               : ""}
                           </div>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-600 w-[240px] truncate">
-                          {p.shortDescription}
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
                           {p.soldQuantity ?? 0}
