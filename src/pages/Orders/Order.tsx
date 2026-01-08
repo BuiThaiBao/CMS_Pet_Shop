@@ -46,7 +46,7 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   WAITING_PAYMENT: [],
   PROCESSING: ["SHIPPED", "CANCELLED"],
   SHIPPED: ["DELIVERED"],
-  DELIVERED: ["COMPLETED"],
+  DELIVERED: [], // Không cho chuyển sang COMPLETED
   COMPLETED: [],
   CANCELLED: [],
 };
@@ -200,6 +200,15 @@ export default function OrderPage() {
     COMPLETED: "bg-green-100 text-green-700",
     CANCELLED: "bg-red-100 text-red-700",
   };
+  const STATUS_LABEL: Record<OrderStatus, string> = {
+  WAITING_PAYMENT: "Chờ thanh toán",
+  PROCESSING: "Đang xử lý",
+  SHIPPED: "Đang giao hàng",
+  DELIVERED: "Đã giao",
+  COMPLETED: "Hoàn thành",
+  CANCELLED: "Đã hủy",
+};
+
 
   return (
     <>
@@ -263,7 +272,7 @@ export default function OrderPage() {
               onClick={() => handleBulkUpdate(s)}
               className={`px-4 py-2 rounded text-white text-sm ${BULK_BUTTON_STYLE[s]} disabled:opacity-50`}
             >
-              {s.replace("_", " ")}
+              {STATUS_LABEL[s]}
             </button>
           ))}
 

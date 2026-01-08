@@ -102,9 +102,14 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     // Reset form when appointment changes or modal closes
     useEffect(() => {
         if (appointment && isOpen) {
+            // Parse slotDate from appointmentStart
+            // appointmentStart format: "2026-01-09 10:00:00"
+            const slotDate = appointment.appointmentStart.split(' ')[0]; // "2026-01-09"
+            
+            const bookingTimeId = appointment.bookingTimeId ? Number(appointment.bookingTimeId) : 0;
             setSelectedServiceId(appointment.serviceId);
-            setSelectedDate(appointment.slotDate);
-            setSelectedBookingTimeId(appointment.bookingTimeId);
+            setSelectedDate(slotDate);
+            setSelectedBookingTimeId(bookingTimeId);
             setNamePet(appointment.namePet);
             setSpeciePet(appointment.speciePet);
             setStatus(appointment.status);
@@ -139,9 +144,11 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
             // Allow selecting the appointment's original date even if it's today or earlier
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const appointmentDate = appointment?.slotDate ? new Date(appointment.slotDate) : today;
+            // Parse slotDate from appointmentStart
+            const appointmentSlotDate = appointment?.appointmentStart ? appointment.appointmentStart.split(' ')[0] : null;
+            const appointmentDate = appointmentSlotDate ? new Date(appointmentSlotDate) : today;
             const minDateValue = appointmentDate < today ? appointmentDate : today;
-            const initialDate = selectedDate || appointment?.slotDate;
+            const initialDate = selectedDate || appointmentSlotDate;
 
             flatpickrInstance.current = flatpickr(datePickerRef.current, {
                 locale: Vietnamese,
@@ -167,7 +174,14 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                 flatpickrInstance.current = null;
             }
         };
-    }, [isEditMode]);
+    }, [isEditMode, appointment]);  // Only re-init when entering edit mode or appointment changes
+
+    // Update flatpickr when selectedDate changes (without destroying instance)
+    useEffect(() => {
+        if (isEditMode && flatpickrInstance.current && selectedDate) {
+            flatpickrInstance.current.setDate(selectedDate, false);
+        }
+    }, [selectedDate, isEditMode]);
 
     const fetchActiveServices = async () => {
         try {
@@ -194,27 +208,39 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                 const available = response.data.result;
 
                 // Include current booking time in the list if same date and service
-                if (appointment &&
-                    selectedDate === appointment.slotDate &&
-                    selectedServiceId === appointment.serviceId &&
-                    !available.find((bt) => bt.id === appointment.bookingTimeId)
-                ) {
-                    // Add current booking time slot as available (it's the user's own slot)
-                    available.unshift({
-                        id: appointment.bookingTimeId,
-                        slotDate: appointment.slotDate,
-                        startTime: appointment.startTime,
-                        endTime: appointment.endTime,
-                        maxCapacity: 1,
-                        bookedCount: 0,
-                        availableCount: 1, // Mark as available since it's user's own slot
-                    });
+                if (appointment) {
+                    const appointmentSlotDate = appointment.appointmentStart.split(' ')[0];
+                    const appointmentStartTime = appointment.appointmentStart.split(' ')[1];
+                    const appointmentEndTime = appointment.appointmentEnd.split(' ')[1];
+                    
+                    if (selectedDate === appointmentSlotDate &&
+                        selectedServiceId === appointment.serviceId &&
+                        !available.find((bt) => bt.id === appointment.bookingTimeId)
+                    ) {
+                        // Add current booking time slot as available (it's the user's own slot)
+                        available.unshift({
+                            id: appointment.bookingTimeId,
+                            slotDate: appointmentSlotDate,
+                            startTime: appointmentStartTime,
+                            endTime: appointmentEndTime,
+                            maxCapacity: 1,
+                            bookedCount: 0,
+                            availableCount: 1, // Mark as available since it's user's own slot
+                        });
+                    }
                 }
 
                 setBookingTimes(available);
+                
+                // Re-select the booking time after fetch if it matches
+                if (appointment && 
+                    selectedDate === appointment.appointmentStart.split(' ')[0] && 
+                    selectedServiceId === appointment.serviceId) {
+                    setSelectedBookingTimeId(appointment.bookingTimeId);
+                }
             }
         } catch (error) {
-            console.error("Error fetching booking times:", error);
+            // console.error("Error fetching booking times:", error);
             setBookingTimes([]);
         } finally {
             setLoading(false);
@@ -223,13 +249,20 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
 
     const handleServiceChange = (serviceId: number) => {
         setSelectedServiceId(serviceId);
-        setSelectedBookingTimeId(0); // Reset booking time when service changes
+        // Only reset booking time if service actually changed
+        if (!appointment || serviceId !== appointment.serviceId) {
+            setSelectedBookingTimeId(0);
+        }
         setBookingTimes([]); // Clear booking times
     };
 
     const handleDateChange = (date: string) => {
+        const appointmentSlotDate = appointment?.appointmentStart ? appointment.appointmentStart.split(' ')[0] : null;
         setSelectedDate(date);
-        setSelectedBookingTimeId(0); // Reset booking time when date changes
+        // Only reset booking time if date actually changed
+        if (!appointment || date !== appointmentSlotDate) {
+            setSelectedBookingTimeId(0);
+        }
         setBookingTimes([]); // Clear booking times
     };
 
@@ -240,9 +273,11 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     const handleCancelEdit = () => {
         // Reset form to original values
         if (appointment) {
+            const slotDate = appointment.appointmentStart.split(' ')[0];
+            const bookingTimeId = appointment.bookingTimeId ? Number(appointment.bookingTimeId) : 0;
             setSelectedServiceId(appointment.serviceId);
-            setSelectedDate(appointment.slotDate);
-            setSelectedBookingTimeId(appointment.bookingTimeId);
+            setSelectedDate(slotDate);
+            setSelectedBookingTimeId(bookingTimeId);
             setNamePet(appointment.namePet);
             setSpeciePet(appointment.speciePet);
             setStatus(appointment.status);

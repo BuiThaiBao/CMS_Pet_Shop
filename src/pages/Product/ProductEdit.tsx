@@ -13,6 +13,7 @@ import VariantAddModal from "../../components/Product/VariantAddModal";
 import VariantEditModal from "../../components/Product/VariantEditModal";
 import ProductImageUploadModal from "../../components/Product/ProductImageUploadModal";
 import ImageModal from "../../components/common/ImageModal";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 type ProductImage = {
   id: number;
@@ -70,6 +71,8 @@ export default function ProductEdit() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<number | null>(null);
 
   // Load product data
   useEffect(() => {
@@ -287,19 +290,22 @@ export default function ProductEdit() {
   };
 
   const handleDeleteImage = async (imageId: number) => {
-    if (!window.confirm("Are you sure you want to delete this image? This action cannot be undone.")) {
-      return;
-    }
+    setImageToDelete(imageId);
+    setIsDeleteConfirmOpen(true);
+  };
 
-    setDeletingImageId(imageId);
+  const confirmDeleteImage = async () => {
+    if (!imageToDelete) return;
+
+    setDeletingImageId(imageToDelete);
 
     // Optimistic update - remove image from UI immediately
     const previousImages = productImages;
-    const updatedImages = productImages.filter(img => img.id !== imageId);
+    const updatedImages = productImages.filter(img => img.id !== imageToDelete);
     setProductImages(updatedImages);
 
     try {
-      await imageApi.delete(imageId);
+      await imageApi.delete(imageToDelete);
       // Success - refresh to ensure data consistency
       refreshProductData();
     } catch (err: any) {
@@ -308,6 +314,7 @@ export default function ProductEdit() {
       setError(err?.message || "Failed to delete image");
     } finally {
       setDeletingImageId(null);
+      setImageToDelete(null);
     }
   };
 
@@ -507,6 +514,18 @@ export default function ProductEdit() {
           alt={name || "Product Image"}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={confirmDeleteImage}
+        title="Xác nhận xóa ảnh"
+        message="Bạn có chắc chắn muốn xóa ảnh này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+      />
               {/* Product Images and Variants Section */}
         <div className="mt-6 bg-white border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">

@@ -145,8 +145,8 @@ export default function ServiceAdd() {
           <h2 className="text-lg font-semibold">{t('service.addService')}</h2>
           <Button
             size="sm"
-            variant="outline"
             onClick={() => navigate("/service")}
+            className="bg-indigo-600 text-white hover:bg-indigo-700"
           >
             ← {t('common.backToList')}
           </Button>
@@ -294,10 +294,10 @@ export default function ServiceAdd() {
                 {bookingTimes.length > 1 && (
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => {
                       setBookingTimes(bookingTimes.filter((_, i) => i !== index));
                     }}
+                    className="bg-red-600 text-white hover:bg-red-700"
                   >
                     <TrashBinIcon className="w-4 h-4" />
                   </Button>
@@ -306,8 +306,8 @@ export default function ServiceAdd() {
             ))}
             <Button
               size="sm"
-              variant="outline"
               onClick={() => setBookingTimes([...bookingTimes, { startTime: "", maxCapacity: "" }])}
+              className="bg-indigo-600 justify-end text-white hover:bg-indigo-700 "
             >
               {t('service.addSlot')}
             </Button>
