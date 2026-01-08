@@ -398,7 +398,7 @@ export default function PetAdd() {
 
                 <div className="mb-6">
                   <label className="mb-2.5 block text-black dark:text-white">
-                    {t('common.description')}
+                    {t('common.description')}<span className="text-meta-1">*</span>
                   </label>
                   <textarea
                     rows={4}
@@ -406,6 +406,7 @@ export default function PetAdd() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                    required
                   ></textarea>
                 </div>
 
