@@ -70,6 +70,9 @@ const petApi = {
   },
   getAnimalsForAdmin: () => {
     return http.get("/pets/animalsAdmin");
+  },
+  getBreeds: () => {
+    return http.get("/pets/breeds");
   }
 };
 

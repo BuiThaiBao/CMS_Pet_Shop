@@ -22,8 +22,12 @@ export default function PetList() {
   // Filter states
   const [status, setStatus] = useState("");
   const [animal, setAnimal] = useState("");
+  const [breed, setBreed] = useState("");
+  const [breedOptions, setBreedOptions] = useState<{ value: string; label: string }[]>([]);
   const [size, setSize] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
+  const [name, setName] = useState("");
+  const [debouncedName, setDebouncedName] = useState("");
   const [includeDeleted, setIncludeDeleted] = useState<boolean>(false);
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -42,19 +46,6 @@ export default function PetList() {
     { value: "BIRD", label: "Chim" },
     { value: "RABBIT", label: "Thỏ" },
     { value: "OTHER", label: "Khác" },
-  ];
-  const sizeOptions = [
-    { value: "", label: t('pet.allSizes') },
-    { value: "Small", label: t('pet.small') },
-    { value: "Medium", label: t('pet.medium') },
-    { value: "Big", label: t('pet.big') },
-  ];
-  const ageGroupOptions = [
-    { value: "", label: t('pet.allAgeGroups') },
-    { value: "Young", label: "Trẻ" },
-    { value: "Child", label: "Nhỏ" },
-    { value: "Adult", label: "Trưởng thành" },
-    { value: "Senior", label: "Già" },
   ];
   const statusOptions = [
     { value: "", label: t('pet.allStatuses') },
@@ -87,6 +78,30 @@ export default function PetList() {
   };
 
   useEffect(() => {
+    const fetchBreeds = async () => {
+      try {
+        const res = await petApi.getBreeds();
+        const data = res.data?.result || res.data || [];
+        if (Array.isArray(data)) {
+          const options = data.map((b: string) => ({ value: b, label: b }));
+          setBreedOptions([{ value: "", label: "Tất cả giống" }, ...options]);
+        }
+      } catch (err) {
+        console.error("Failed to load breeds", err);
+      }
+    };
+    fetchBreeds();
+  }, []);
+
+  // Debounce search name
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedName(name);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [name]);
+
+  useEffect(() => {
     let mounted = true;
     const load = async () => {
       if (!mounted) return;
@@ -97,12 +112,12 @@ export default function PetList() {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNumber, pageSize, animal, size, ageGroup, status, includeDeleted]);
+  }, [pageNumber, pageSize, animal, size, ageGroup, status, includeDeleted, debouncedName, breed]);
 
   useEffect(() => {
     // Reset to page 1 when filters change
     setPageNumber(1);
-  }, [animal, size, ageGroup, status]);
+  }, [animal, size, ageGroup, status, debouncedName, breed]);
 
   const loadPets = async (page: number, pageSizeParam: number) => {
     setLoading(true);
@@ -124,6 +139,8 @@ export default function PetList() {
       
       // Thêm filter params
       if (animal) params.animal = animal;
+      if (breed) params.breed = breed;
+      if (debouncedName) params.name = debouncedName;
       if (size) params.size = size; // Filter size (Small/Medium/Big)
       if (ageGroup) params.ageGroup = ageGroup;
       if (status) params.status = status;
@@ -330,9 +347,26 @@ export default function PetList() {
           <div className="p-4">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm theo tên..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64"
+                  />
+                  <svg
+                    className="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
                 <Select options={animalOptions} value={animal} onChange={setAnimal} placeholder={t('pet.allAnimals')} />
-                <Select options={sizeOptions} value={size} onChange={setSize} placeholder={t('pet.allSizes')} />
-                <Select options={ageGroupOptions} value={ageGroup} onChange={setAgeGroup} placeholder={t('pet.allAgeGroups')} />
+                <Select options={breedOptions} value={breed} onChange={setBreed} placeholder="Tất cả giống" />
                 <Select options={statusOptions} value={status} onChange={setStatus} placeholder={t('pet.allStatuses')} />
               </div>
             </div>
@@ -346,7 +380,6 @@ export default function PetList() {
                     <th className="py-3 px-4">{t('pet.age')}</th>
                     <th className="py-3 px-4">{t('pet.gender')}</th>
                     <th className="py-3 px-4">{t('pet.weight')}</th>
-                    <th className="py-3 px-4">{t('pet.ageGroup')}</th>
                     <th className="py-3 px-4">{t('pet.healthStatus')}</th>
                     <th className="py-3 px-4">{t('common.status')}</th>
                     <th className="py-3 px-4">{t('common.deleted')}</th>
@@ -378,7 +411,6 @@ export default function PetList() {
                         <td className="py-4 px-4">{pet.age}</td>
                         <td className="py-4 px-4">{getGenderLabel(pet.gender)}</td>
                         <td className="py-4 px-4">{pet.weight}</td>
-                        <td className="py-4 px-4">{getLabel(ageGroupOptions, pet.ageGroup)}</td>
                         <td className="py-4 px-4">{getHealthLabel(pet.healthStatus || "Good")}</td>
                         <td className="py-4 px-4">{getLabel(statusOptions, pet.status)}</td> 
                         <td className="py-4 px-4">

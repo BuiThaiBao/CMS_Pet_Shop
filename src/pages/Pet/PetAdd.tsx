@@ -19,11 +19,13 @@ export default function PetAdd() {
   const [age, setAge] = useState<string>("");
   const [ageGroup, setAgeGroup] = useState<string>("");
 
-  // Tự động cập nhật ageGroup khi nhập tuổi
+  // Tự động cập nhật ageGroup khi nhập tuổi (Giữ logic để tính toán nếu cần, nhưng không hiển thị input)
   const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    if (Number(value) < 0) return; // Prevent negative values
     setAge(value);
     const num = Number(value);
+    // Vẫn tính toán ageGroup ngầm định nếu backend cần, hoặc cứ để ""
     if (!value) {
       setAgeGroup("");
     } else if (num < 1) {
@@ -54,29 +56,24 @@ export default function PetAdd() {
   const [error, setError] = useState<string | null>(null);
 
   // Options
-  const ageGroupOptions = [
-    { value: "Young", label: "(< 1 tuổi)" },
-    { value: "Child", label: "(1-3 tuổi)" },
-    { value: "Adult", label: "(3-7 tuổi)" },
-    { value: "Senior", label: "(> 7 tuổi)" },
-  ];
+  // Removed ageGroupOptions user requested to remove the field
 
   const genderOptions = [
-    { value: "Male", label: "Đực" },
-    { value: "Female", label: "Cái" },
+    { value: "Đực", label: "Đực" },
+    { value: "Cái", label: "Cái" },
   ];
 
   const animalOptions = [
-    { value: "DOG", label: "Chó" },
-    { value: "CAT", label: "Mèo" },
-    { value: "BIRD", label: "Chim" },
-    { value: "RABBIT", label: "Thỏ" },
-    { value: "OTHER", label: "Khác" },
+    { value: "Chó", label: "Chó" },
+    { value: "Mèo", label: "Mèo" },
+    { value: "Chim", label: "Chim" },
+    { value: "Thỏ", label: "Thỏ" },
+    { value: "Khác", label: "Khác" },
   ];
 
   const healthStatusOptions = [
-    { value: "BAD", label: "Xấu" },
-    { value: "GOOD", label: "Tốt" },
+    { value: "Tệ", label: "Tệ" },
+    { value: "Tốt", label: "Tốt" },
   ];
 
   // ==================== Image Upload Logic ====================
@@ -182,7 +179,7 @@ export default function PetAdd() {
   // ==================== Submit Logic ====================
 
   const handleSubmit = async () => {
-    if (!name || !animal || !breed || !age || !ageGroup || !weight || !gender) {
+    if (!name || !animal || !breed || !age || !weight || !gender) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -240,7 +237,6 @@ export default function PetAdd() {
       animal &&
       breed && breed.trim() &&
       age !== "" &&
-      ageGroup &&
       weight !== "" &&
       gender &&
       petImages.length > 0
@@ -351,19 +347,7 @@ export default function PetAdd() {
                 </div>
 
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
-                  <div className="w-full xl:w-1/3">
-                    <label className="mb-2.5 block text-black dark:text-white">
-                      {t('pet.ageGroup')} <span className="text-meta-1">*</span>
-                    </label>
-                    <Select
-                      options={ageGroupOptions}
-                      value={ageGroup}
-                      onChange={(val) => setAgeGroup(val)}
-                      placeholder={t('pet.selectAgeGroup')}
-                      required
-                    />
-                  </div>
-                  <div className="w-full xl:w-1/3">
+                  <div className="w-full xl:w-1/2">
                     <label className="mb-2.5 block text-black dark:text-white">
                       {t('pet.weight')} <span className="text-meta-1">*</span>
                     </label>
@@ -382,7 +366,7 @@ export default function PetAdd() {
                       className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
                     />
                   </div>
-                  <div className="w-full xl:w-1/3">
+                  <div className="w-full xl:w-1/2">
                     <label className="mb-2.5 block text-black dark:text-white">
                       {t('pet.gender')} <span className="text-meta-1">*</span>
                     </label>
@@ -413,7 +397,7 @@ export default function PetAdd() {
                 <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
                   <div className="w-full xl:w-1/2">
                       <label className="mb-2.5 block text-black dark:text-white">
-                        {t('pet.healthStatus')}
+                        {t('pet.healthStatus')} <span className="text-meta-1">*</span>
                       </label>
                       <Select
                         options={healthStatusOptions}

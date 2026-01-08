@@ -103,7 +103,7 @@ export default function PetDetailModal({
               onClick={onClose}
               className="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
             >
-              Close
+              Đóng
             </button>
           </div>
         ) : pet ? (
@@ -115,46 +115,46 @@ export default function PetDetailModal({
               </h2>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
                 <span>ID: {pet.id}</span>
-                {pet.animal && <span>Animal: {pet.animal}</span>}
-                {pet.breed && <span>Breed: {pet.breed}</span>}
+                {pet.animal && <span>Động vật: {pet.animal}</span>}
+                {pet.breed && <span>Giống: {pet.breed}</span>}
                 {pet.age !== undefined && pet.age !== null && (
-                  <span>Age: {pet.age}</span>
+                  <span>Tuổi: {pet.age}</span>
                 )}
-                {pet.ageGroup && <span>Age Group: {pet.ageGroup}</span>}
-                {pet.size && <span>Size: {pet.size}</span>}
-                {pet.gender && <span>Gender: {pet.gender}</span>}
+                {pet.ageGroup && <span>Nhóm tuổi: {pet.ageGroup}</span>}
+                {pet.size && <span>Kích thước: {pet.size}</span>}
+                {pet.gender && <span>Giới tính: {pet.gender}</span>}
                 {pet.isDeleted === "1" && (
                   <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
-                    Deleted
+                    Đã xóa
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Description & health */}
+            {/* Mô tả & sức khỏe */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Description</h3>
+                <h3 className="text-lg font-semibold mb-2">Mô tả</h3>
                 <p className="text-sm text-gray-700 whitespace-pre-line">
                   {pet.description || "No description"}
                 </p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Health</h3>
+                <h3 className="text-lg font-semibold mb-2">Sức khỏe</h3>
                 <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Health Status: </span>
+                  <span className="font-semibold">Tình trạng sức khỏe: </span>
                   {pet.healthStatus || "N/A"}
                 </p>
                 <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Status: </span>
+                  <span className="font-semibold">Trạng thái: </span>
                   {pet.status || "N/A"}
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
-                  <span className="font-semibold">Vaccinated: </span>
+                  <span className="font-semibold">Đã tiêm phòng: </span>
                   {normalizeBoolean(pet.vaccinated)}
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
-                  <span className="font-semibold">Neutered: </span>
+                  <span className="font-semibold">Đã triệt sản: </span>
                   {normalizeBoolean(pet.neutered)}
                 </p>
               </div>
@@ -162,7 +162,7 @@ export default function PetDetailModal({
 
             {/* Images */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3">Images</h3>
+              <h3 className="text-lg font-semibold mb-3">Hình ảnh</h3>
               {imageList && imageList.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {imageList.map((img, index) => (
@@ -171,9 +171,9 @@ export default function PetDetailModal({
                       className="border rounded-lg overflow-hidden bg-gray-50"
                     >
                       <div className="relative">
-                        {img.isPrimary && (
+                        {(img.isPrimary === 1 || img.isPrimary === true) && (
                           <div className="absolute top-2 left-2 z-10 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                            Primary
+                            Chính
                           </div>
                         )}
                         <img
@@ -198,7 +198,7 @@ export default function PetDetailModal({
                 </div>
               ) : (
                 <div className="text-center py-8 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-500">No images available</p>
+                  <p className="text-sm text-gray-500">Không có hình ảnh</p>
                 </div>
               )}
             </div>
@@ -206,11 +206,11 @@ export default function PetDetailModal({
             {/* Metadata */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
               <p className="text-sm text-gray-600">
-                <span className="font-semibold">Created:</span>{" "}
+                <span className="font-semibold">Ngày tạo:</span>{" "}
                 {pet.createdDate || "N/A"}
               </p>
               <p className="text-sm text-gray-600">
-                <span className="font-semibold">Updated:</span>{" "}
+                <span className="font-semibold">Ngày cập nhật:</span>{" "}
                 {pet.updatedDate || "N/A"}
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function PetDetailModal({
                 onClick={onClose}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                Close
+                Đóng
               </button>
             </div>
           </div>
